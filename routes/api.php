@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Api\Manager\AccountController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\Authenticate\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -15,8 +17,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
-});
-
 // Route::get("users", [UserController::class, "getUser"]);
+
+Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(function () {
+    Route::prefix('account')->group(function(){
+        Route::post('create', [AccountController::class, 'createUser']);
+    });
+});
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+});

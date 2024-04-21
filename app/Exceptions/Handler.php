@@ -55,7 +55,7 @@ class Handler extends ExceptionHandler
             }
 
             if ($e instanceof AuthenticationException) {
-                return $this->failure('Chưa đăng nhập hoặc không có quyền hạn', $e->getTrace(), Response::HTTP_UNAUTHORIZED);
+                return $this->failure('Chưa đăng nhập hoặc không có quyền hạn', $e->getMessage(), Response::HTTP_UNAUTHORIZED);
             }
 
             if ($e instanceof ValidationException) {
