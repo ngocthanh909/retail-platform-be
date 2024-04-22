@@ -9,6 +9,9 @@ use DB;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use Illuminate\Http\Response;
 use Laravel\Passport\Token;
+use App\Models\User;
+use App\Models\Customer;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
@@ -21,29 +24,46 @@ class AuthController extends Controller
                 "phone" => $request->phone,
                 "password" => $request->password
             ];
-            if (!$this->guardAdmin()->attempt($credentials)) {
-                return $this->failure('Sai tên đăng nhập hoặc mật khẩu', [], 500);
-            }
-            $user = $this->guardAdmin()->user();
-            $role = 'employee';
-            $abilities = ['employee'];
-            if($user->is_admin){
-                $abilities[] = 'admin';
-                $role = "admin";
-            }
-            $tokenResult = $user->createToken("$role:".$user->id .';'.now(), $abilities, now()->addYear());
-            $token = $tokenResult->plainTextToken;
-            DB::commit();
+            $checkUser = User::where('phone', $credentials['phone'])->first();
+            $checkCustomer = Customer::where('phone', $credentials['phone'])->first();
 
-            $responseData = [
-                "token" => $token,
-                "type" => "Bearer",
-                "abilities" => $abilities
-            ];
-            return $this->success($responseData, "Đăng nhập thành công");
+            if(!$checkUser && !$checkCustomer){
+                throw new \Exception("Tên đăng nhập không tồn tại!");
+            }
+            $user = null;
+            $role = '';
+            $abilities = [];
+            if ($checkUser && $this->guardManager()->attempt($credentials)) {
+                $user = $this->guardManager()->user();
+                $abilities[] = 'employee';
+                $role = 'employee';
+                if($user->is_admin){
+                    $abilities[] = 'admin';
+                    $role = "admin";
+                }
+            }
+            if($checkCustomer && $this->guardCustomer()->attempt($credentials)){
+                $user = $this->guardCustomer()->user();
+                $abilities[] = 'customer';
+                $role = 'customer';
+            }
+
+            if($user){
+                $tokenResult = $user->createToken("$role:".$user->id .';'.now(), $abilities, now()->addYear());
+                $token = $tokenResult->plainTextToken;
+                DB::commit();
+                $responseData = [
+                    "token" => $token,
+                    "type" => "Bearer",
+                    "abilities" => $abilities,
+                    "user" => $user
+                ];
+                return $this->success($responseData, "Đăng nhập thành công");
+            }
+            throw new \Exception("Mật khẩu không đúng!");
         } catch (\Throwable $e){
             DB::rollback();
-            return $this->failure();
+            return $this->failure($e->getMessage(), $e->getLine());
         }
     }
 
@@ -59,7 +79,37 @@ class AuthController extends Controller
         }
     }
 
-    protected function guardAdmin() {
-        return Auth::guard('admin');
+    public function signup(Request $request){
+        try {
+            $data = $request->all();
+
+            $customerData = [
+                'customer_name' => $data['customer_name'],
+                'phone' => $data['phone'],
+                'email' => $data['email'],
+                'address' => $data['address'] ?? '',
+                'district' => $data['district'] ?? '',
+                'province' => $data['province'] ?? '',
+                'responsible_staff' => 0,
+                'password' => Hash::make($data["password"]),
+                'address' => $data['address'],
+                'status' => $data['status'] ?? true
+            ];
+            $customer = new Customer($customerData);
+            if(!$customer->save()){
+                return $this->failure("Lỗi khi tạo mới khách hàng");
+            }
+            return $this->success($customer, 'Tạo khách hàng thành công');
+        } catch(\Throwable $e){
+            return $this->failure("Lỗi khi tạo mới khách hàng", $e->getMessage());
+        }
+    }
+
+    protected function guardManager() {
+        return Auth::guard('manager');
+    }
+
+    protected function guardCustomer() {
+        return Auth::guard('customer');
     }
 }

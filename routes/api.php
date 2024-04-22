@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\Manager\AccountController;
+use App\Http\Controllers\Api\Manager\CustomerManagementController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -23,8 +24,25 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     Route::prefix('account')->group(function(){
         Route::post('create', [AccountController::class, 'createUser']);
     });
+    Route::prefix('customer')->group(function(){
+        Route::get('list', [CustomerManagementController::class, 'list']);
+        Route::post('create', [CustomerManagementController::class, 'create']);
+        Route::post('/{id}/edit', [CustomerManagementController::class, 'update']);
+        Route::post('/{id}/delete', [CustomerManagementController::class, 'delete']);
+    });
+    Route::prefix('category')->group(function(){
+        Route::get('list', [CustomerManagementController::class, 'list']);
+        // Route::post('create', [CustomerManagementController::class, 'create']);
+        // Route::post('/{id}/edit', [CustomerManagementController::class, 'update']);
+        // Route::post('/{id}/delete', [CustomerManagementController::class, 'delete']);
+    });
+    Route::prefix('common')->group(function(){
+        Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
+        Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
+    });
 });
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::post('signup', [AuthController::class, 'signup']);
 });

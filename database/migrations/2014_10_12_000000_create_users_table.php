@@ -20,8 +20,8 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->rememberToken();
+            $table->tinyInteger('status')->comment('0 - Disabled, 1 Enabled')->default(1);
             $table->timestamps();
-            $table->index('phone');
         });
     }
 
