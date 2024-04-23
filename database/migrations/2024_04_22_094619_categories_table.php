@@ -13,10 +13,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create($this->tableName, function (Blueprint $table) {
-            $table->id('id');
+            $table->id();
             $table->string('category_name', 255);
             $table->string('category_code', 100)->unique();
             $table->string('category_image', 300);
+            $table->tinyInteger('status')->default(1);
             $table->timestamps();
         });
     }

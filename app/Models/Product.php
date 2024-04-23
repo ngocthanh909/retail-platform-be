@@ -7,16 +7,20 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 
-class Category extends Model
+class Product extends Model
 {
     use HasFactory;
-    protected $table = 'categories';
-    protected $fillable = ['category_name', 'category_code', 'category_image'];
+    protected $table = 'products';
+    protected $fillable = ['product_name', 'product_image', 'sku', 'category_id', 'price', 'status'];
 
-    protected function categoryImage(): Attribute
+    protected function productImage(): Attribute
     {
         return Attribute::make(
             get: fn (string $value) => asset(Storage::url($value))
         );
+    }
+
+    public function category(){
+        return $this->belongsTo(Category::class, 'category_id', 'id');
     }
 }

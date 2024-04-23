@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('sku', 100)->unique()->nullable();
             $table->bigInteger('category_id')->default(0);
             $table->double('price')->default(0);
+            $table->tinyInteger('status')->default(1);
             $table->timestamps();
         });
     }

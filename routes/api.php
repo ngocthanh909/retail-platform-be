@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Authenticate\AuthController;
+use App\Http\Controllers\Api\Manager\CategoryManagementController;
+use App\Http\Controllers\Api\Manager\ProductManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -31,12 +33,20 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('/{id}/delete', [CustomerManagementController::class, 'delete']);
     });
     Route::prefix('category')->group(function(){
-        Route::get('list', [CustomerManagementController::class, 'list']);
-        // Route::post('create', [CustomerManagementController::class, 'create']);
-        // Route::post('/{id}/edit', [CustomerManagementController::class, 'update']);
-        // Route::post('/{id}/delete', [CustomerManagementController::class, 'delete']);
+        Route::get('list', [CategoryManagementController::class, 'list']);
+        Route::post('create', [CategoryManagementController::class, 'create']);
+        Route::get('{id}', [CategoryManagementController::class, 'detail']);
+        Route::post('/{id}/edit', [CategoryManagementController::class, 'update']);
+        Route::post('/{id}/delete', [CategoryManagementController::class, 'delete']);
+    });
+    Route::prefix('product')->group(function(){
+        Route::get('list', [ProductManagementController::class, 'list']);
+        Route::post('create', [ProductManagementController::class, 'create']);
+        Route::post('/{id}/edit', [ProductManagementController::class, 'update']);
+        Route::post('/{id}/delete', [ProductManagementController::class, 'delete']);
     });
     Route::prefix('common')->group(function(){
+        Route::get('category', [CategoryManagementController::class, 'list']);
         Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
         Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
     });
