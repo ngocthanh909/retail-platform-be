@@ -29,6 +29,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     Route::prefix('customer')->group(function(){
         Route::get('list', [CustomerManagementController::class, 'list']);
         Route::post('create', [CustomerManagementController::class, 'create']);
+        Route::get('{id}', [CustomerManagementController::class, 'detail']);
         Route::post('/{id}/edit', [CustomerManagementController::class, 'update']);
         Route::post('/{id}/delete', [CustomerManagementController::class, 'delete']);
     });

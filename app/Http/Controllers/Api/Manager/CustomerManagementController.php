@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Support\Facades\Log;
 
 class CustomerManagementController extends Controller
 {
@@ -23,6 +24,20 @@ class CustomerManagementController extends Controller
         $customers = $customers->orderBy('created_at', 'DESC')->paginate(config('paginate.store_list'));
         return $this->success($customers);
     }
+
+    public function detail(Request $request, $id){
+        try {
+            $customer = Customer::findOrFail($id);
+            return $this->success($customer);
+        } catch (\Throwable $e) {
+            Log::error($e);
+            if ($e instanceof ModelNotFoundException) {
+                $message = 'Không tìm thấy cửa hàng này!';
+            }
+            return $this->failure($message, $e->getMessage());
+        }
+    }
+
     public function create(Request $request){
         try {
             $data = $request->all();
