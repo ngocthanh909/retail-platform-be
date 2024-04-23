@@ -87,8 +87,8 @@ class CategoryManagementController extends Controller
                 );
                 if ($fileName) {
                     $category->category_image = $fileName;
-                    if (!empty($oldFile) && Storage::disk('public')->exists($oldFile)) {
-                        Storage::disk('public')->delete($oldFile);
+                    if (!empty($oldFile) && Storage::exists($oldFile)) {
+                        Storage::delete($oldFile);
                     }
                 }
             }
@@ -116,8 +116,8 @@ class CategoryManagementController extends Controller
                 return $this->failure("Lỗi khi xóa ngành hàng");
             }
 
-            if (!empty($oldFile) && Storage::disk('public')->exists($oldFile)) {
-                Storage::disk('public')->delete($oldFile);
+            if (!empty($oldFile) && Storage::exists($oldFile)) {
+                Storage::delete($oldFile);
             }
             return $this->success([], 'Xóa ngành hàng thành công');
         } catch (\Throwable $e) {

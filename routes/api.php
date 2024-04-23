@@ -43,6 +43,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     Route::prefix('product')->group(function(){
         Route::get('list', [ProductManagementController::class, 'list']);
         Route::post('create', [ProductManagementController::class, 'create']);
+        Route::get('{id}', [ProductManagementController::class, 'detail']);
         Route::post('/{id}/edit', [ProductManagementController::class, 'update']);
         Route::post('/{id}/delete', [ProductManagementController::class, 'delete']);
     });

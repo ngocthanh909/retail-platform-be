@@ -23,4 +23,23 @@ class Product extends Model
     public function category(){
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
+
+    public function images(){
+        return $this->hasMany(ProductImage::class, 'product_id', 'id');
+    }
+
+    public static function getOne($id){
+        return self::with(['category', 'images'])->find($id);
+    }
+
+    public static function getMany($filter = null){
+        $query = self::with(['category', 'images']);
+        if(isset($filer['keyword'])){
+            $filer = $filter->where('product_name', 'like', '%' . $filer['keyword'] . '%');
+        }
+        if(isset($filer['category_id'])){
+            $filer = $filter->where('category_id', $filer['category_id']);
+        }
+        return $query->paginate(config('paginate.product'));
+    }
 }
