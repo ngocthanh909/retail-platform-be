@@ -21,7 +21,10 @@ class ProductManagementController extends Controller
 
     public function list(Request $request)
     {
-        $products = Product::getMany([]);
+        $products = Product::getMany([
+            'category_id' => $request->category_id ?? '',
+            'keyword' => $request->keyword ?? '',
+        ]);
         return $this->success($products, 'Lấy danh sách thành công');
     }
 

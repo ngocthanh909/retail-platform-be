@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
+use DB;
 
 class Product extends Model
 {
@@ -33,12 +34,13 @@ class Product extends Model
     }
 
     public static function getMany($filter = null){
-        $query = self::with(['category', 'images']);
-        if(isset($filer['keyword'])){
-            $filer = $filter->where('product_name', 'like', '%' . $filer['keyword'] . '%');
+        $query = self::with(['category']);
+
+        if(!empty($filter['keyword'])){
+            $query = $query->where('product_name', 'like', '%' . $filter['keyword'] . '%');
         }
-        if(isset($filer['category_id'])){
-            $filer = $filter->where('category_id', $filer['category_id']);
+        if(!empty($filter['category_id'])){
+            $query = $query->where('category_id', $filter['category_id']);
         }
         return $query->paginate(config('paginate.product'));
     }

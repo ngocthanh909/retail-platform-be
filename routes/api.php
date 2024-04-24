@@ -47,11 +47,12 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('/{id}/edit', [ProductManagementController::class, 'update']);
         Route::post('/{id}/delete', [ProductManagementController::class, 'delete']);
     });
-    Route::prefix('common')->group(function(){
-        Route::get('category', [CategoryManagementController::class, 'list']);
-        Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
-        Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
-    });
+});
+Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin'])->group(function(){
+    Route::get('category', [CategoryManagementController::class, 'list']);
+    Route::get('customer', [CustomerManagementController::class, 'list']);
+    Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
+    Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
 });
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
