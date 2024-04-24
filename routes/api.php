@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Authenticate\AuthController;
+use App\Http\Controllers\Api\Common\OrderController;
 use App\Http\Controllers\Api\Manager\CategoryManagementController;
 use App\Http\Controllers\Api\Manager\ProductManagementController;
 
@@ -54,6 +55,11 @@ Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,emp
     Route::get('customer', [CustomerManagementController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
     Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
+
+    Route::prefix('order')->group(function(){
+        Route::post('calculate', [OrderController::class, 'calculateOrder']);
+    });
+
 });
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
