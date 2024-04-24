@@ -14,18 +14,35 @@ use Illuminate\Support\Facades\Log;
 class CustomerManagementController extends Controller
 {
     use ApiResponseTrait;
-    public function list(Request $request){
-        $customers = Customer::where('status', 1);
-
-        $keyword = $request->keyword;
-        if(!empty($keyword)){
-            $customers = $customers->where('customer_name', 'like', "%$keyword%");
+    public function list(Request $request)
+    {
+        try {
+            $customers = Customer::where('status', 1);
+            $keyword = $request->keyword;
+            if (!empty($keyword)) {
+                $customers = $customers->where('customer_name', 'like', "%$keyword%");
+            }
+            $customers = $customers->orderBy('created_at', 'DESC')->paginate(config('paginate.store_list'));
+            return $this->success($customers);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->failure('Lỗi khi lấy danh sách cửa hàng');
         }
-        $customers = $customers->orderBy('created_at', 'DESC')->paginate(config('paginate.store_list'));
-        return $this->success($customers);
     }
 
-    public function detail(Request $request, $id){
+    public function listAll(Request $request)
+    {
+        try {
+            $customers = Customer::get();
+            return $this->success($customers);
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->failure('Lỗi khi lấy danh sách cửa hàng');
+        }
+    }
+
+    public function detail(Request $request, $id)
+    {
         try {
             $customer = Customer::findOrFail($id);
             return $this->success($customer);
@@ -38,10 +55,10 @@ class CustomerManagementController extends Controller
         }
     }
 
-    public function create(Request $request){
+    public function create(Request $request)
+    {
         try {
             $data = $request->all();
-
             $customerData = [
                 'customer_name' => $data['customer_name'],
                 'phone' => $data['phone'],
@@ -55,16 +72,17 @@ class CustomerManagementController extends Controller
                 'status' => $data['status'] ?? true
             ];
             $customer = new Customer($customerData);
-            if(!$customer->save()){
+            if (!$customer->save()) {
                 return $this->failure("Lỗi khi tạo mới khách hàng");
             }
             return $this->success($customer, 'Tạo khách hàng thành công');
-        } catch(\Throwable $e){
+        } catch (\Throwable $e) {
             return $this->failure("Lỗi khi tạo mới khách hàng", $e->getMessage());
         }
     }
 
-    public function update(Request $request, $id){
+    public function update(Request $request, $id)
+    {
         try {
             $data = $request->all();
             $customer = Customer::findOrFail($id);
@@ -81,46 +99,49 @@ class CustomerManagementController extends Controller
                 'status' => $data['status'] ?? true
             ];
 
-            if(!empty($data['password'])){
+            if (!empty($data['password'])) {
                 $customerData['password'] = Hash::make($data["password"]);
             }
 
             $customer->fill($customerData);
 
-            if(!$customer->save()){
+            if (!$customer->save()) {
                 return $this->failure("Lỗi khi sửa cửa hàng");
             }
             return $this->success($customer, 'Sửa cửa hàng thành công');
-        } catch(\Throwable $e){
+        } catch (\Throwable $e) {
             $message = 'Lỗi khi cập nhật thông tin cửa hàng';
-            if($e instanceof ModelNotFoundException){
+            if ($e instanceof ModelNotFoundException) {
                 $message = 'Không tìm thấy cửa hàng này!';
             }
             return $this->failure($message, $e->getMessage());
         }
     }
 
-    public function delete(Request $request, $id){
+    public function delete(Request $request, $id)
+    {
         try {
             $customer = Customer::findOrFail($id);
-            if(!$customer->delete()){
+            if (!$customer->delete()) {
                 return $this->failure("Lỗi khi xóa hàng");
             }
             return $this->success([], 'Xóa hàng thành công');
-        } catch(\Throwable $e){
+        } catch (\Throwable $e) {
             $message = 'Lỗi khi xóa thông tin cửa hàng';
-            if($e instanceof ModelNotFoundException){
+            if ($e instanceof ModelNotFoundException) {
                 $message = 'Không tìm thấy cửa hàng này!';
             }
             return $this->failure($message, $e->getMessage());
         }
     }
 
-    public function getDiscountRate(Request $request){
+    public function getDiscountRate(Request $request)
+    {
         $discountRate = Config::getConfig('discount');
         return $this->success(['rate' => $discountRate]);
     }
-    public function editDiscountRate(Request $request){
+    public function editDiscountRate(Request $request)
+    {
         $update = Config::editConfig('discount', $request->rate);
         return $update ? $this->success() : $this->failure();
     }

@@ -8,6 +8,7 @@ use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -50,11 +51,12 @@ class ProductManagementController extends Controller
         try {
             $data = $request->all();
             $product = new Product([
-                'product_name' => $data['product_name'],
-                'sku' => $data['sku'],
-                'price' => $data['price'],
+                'product_name' => $data['product_name'] ?? '',
+                'sku' => $data['sku'] ?? '',
+                'price' => $data['price'] ?? 0,
+                'description' => $data['description'] ?? '',
                 'product_image' => '',
-                'category_id' => $data['category_id'],
+                'category_id' => $data['category_id'] ?? 0,
                 'status' => $data['status'] ?? 1,
             ]);
             $files = $request->hasFile('images') ? $request->file('images') : null;
@@ -121,6 +123,7 @@ class ProductManagementController extends Controller
                 'product_name' => $data['product_name'],
                 'sku' => $data['sku'],
                 'price' => $data['price'],
+                'description' => $data['description'] ?? '',
                 'category_id' => $data['category_id'],
                 'status' => $data['status'] ?? 1,
             ]);
@@ -200,6 +203,24 @@ class ProductManagementController extends Controller
         } catch (\Throwable $e) {
             Log::error($e);
             $message = 'Lỗi khi xóa thông tin sản phẩm';
+            if ($e instanceof ModelNotFoundException) {
+                $message = 'Không tìm thấy sản phẩm này!';
+            }
+            return $this->failure($message, $e->getMessage());
+        }
+    }
+
+    public function disable(Request $request, $id)
+    {
+        try {
+            $disable = Product::where('id', $id)->update(['status' => 0]);
+            if($disable){
+                throw new Exception('Xóa sản phẩm thất bại');
+            }
+            return $this->success([], 'Ngừng kinh doanh sản phẩm thành công');
+        } catch (\Throwable $e) {
+            Log::error($e);
+            $message = 'Lỗi khi ngừng kinh doanh sản phẩm';
             if ($e instanceof ModelNotFoundException) {
                 $message = 'Không tìm thấy sản phẩm này!';
             }

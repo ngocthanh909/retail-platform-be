@@ -46,10 +46,11 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::get('{id}', [ProductManagementController::class, 'detail']);
         Route::post('/{id}/edit', [ProductManagementController::class, 'update']);
         Route::post('/{id}/delete', [ProductManagementController::class, 'delete']);
+        Route::post('/{id}/disable', [ProductManagementController::class, 'disable']);
     });
 });
-Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin'])->group(function(){
-    Route::get('category', [CategoryManagementController::class, 'list']);
+Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+    Route::get('category', [CategoryManagementController::class, 'listAll']);
     Route::get('customer', [CustomerManagementController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
     Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);

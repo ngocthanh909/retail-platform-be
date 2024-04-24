@@ -20,13 +20,17 @@ class CategoryManagementController extends Controller
         return $this->success($categories, 'Lấy danh sách thành công');
     }
 
+    public function listAll(Request $request){
+        $categories = Category::get();
+        return $this->success($categories, 'Lấy danh sách thành công');
+    }
+
     public function detail(Request $request, $id){
         try {
             $category = Category::findOrFail($id);
             return $this->success($category);
         } catch (\Throwable $e) {
             Log::error($e);
-
             if ($e instanceof ModelNotFoundException) {
                 $message = 'Không tìm thấy ngành hàng này!';
             }
