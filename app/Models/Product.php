@@ -21,25 +21,29 @@ class Product extends Model
         );
     }
 
-    public function category(){
+    public function category()
+    {
         return $this->belongsTo(Category::class, 'category_id', 'id');
     }
 
-    public function images(){
+    public function images()
+    {
         return $this->hasMany(ProductImage::class, 'product_id', 'id');
     }
 
-    public static function getOne($id){
+    public static function getOne($id)
+    {
         return self::with(['category', 'images'])->find($id);
     }
 
-    public static function getMany($filter = null){
+    public static function getMany($filter = null)
+    {
         $query = self::with(['category']);
 
-        if(!empty($filter['keyword'])){
+        if (!empty($filter['keyword'])) {
             $query = $query->where('product_name', 'like', '%' . $filter['keyword'] . '%');
         }
-        if(!empty($filter['category_id'])){
+        if (!empty($filter['category_id'])) {
             $query = $query->where('category_id', $filter['category_id']);
         }
         return $query->paginate(config('paginate.product'));

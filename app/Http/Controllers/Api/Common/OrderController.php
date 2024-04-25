@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Common;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\OrderRequest;
 use Illuminate\Http\Request;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\Category;
@@ -21,8 +22,9 @@ use Illuminate\Support\Str;
 class OrderController extends Controller
 {
     use ApiResponseTrait;
-    public function calculateOrder(Request $request)
+    public function calculateOrder(OrderRequest $request)
     {
+        dd($request->all());
         try {
             $data = $request->all();
             $rawProducts = $data['products'] ?? [];

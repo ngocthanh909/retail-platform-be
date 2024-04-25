@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CategoryRequest;
 use Illuminate\Http\Request;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\Category;
@@ -38,10 +39,10 @@ class CategoryManagementController extends Controller
         }
     }
 
-    public function create(Request $request)
+    public function create(CategoryRequest $request)
     {
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $category = new Category([
                 'category_name' => $data['category_name'],
                 'category_code' => $data['category_code'],
@@ -70,10 +71,10 @@ class CategoryManagementController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(CategoryRequest $request, $id)
     {
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $category = Category::findOrFail($id);
             $category->fill([
                 'category_name' => $data['category_name'],

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ProductRequest;
 use Illuminate\Http\Request;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\Category;
@@ -43,13 +44,13 @@ class ProductManagementController extends Controller
         }
     }
 
-    public function create(Request $request)
+    public function create(ProductRequest $request)
     {
         DB::beginTransaction();
         $fileNames = [];
         $fileNameRaw = [];
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $product = new Product([
                 'product_name' => $data['product_name'] ?? '',
                 'sku' => $data['sku'] ?? '',
@@ -109,14 +110,14 @@ class ProductManagementController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(ProductRequest $request, $id)
     {
         DB::beginTransaction();
         $fileNames = [];
         $fileNameRaw = [];
         $oldImages = [];
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $product = Product::findOrFail($id);
             $oldImagePathIds = explode(',', $data['old_images']);
             $product->fill([

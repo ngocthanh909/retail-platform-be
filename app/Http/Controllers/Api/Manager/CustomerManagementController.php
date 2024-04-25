@@ -6,6 +6,7 @@ use App\Models\Config;
 use App\Models\Customer;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CustomerRequest;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -55,10 +56,10 @@ class CustomerManagementController extends Controller
         }
     }
 
-    public function create(Request $request)
+    public function create(CustomerRequest $request)
     {
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $customerData = [
                 'customer_name' => $data['customer_name'],
                 'phone' => $data['phone'],
@@ -81,10 +82,10 @@ class CustomerManagementController extends Controller
         }
     }
 
-    public function update(Request $request, $id)
+    public function update(CustomerRequest $request, $id)
     {
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $customer = Customer::findOrFail($id);
 
             $customerData = [

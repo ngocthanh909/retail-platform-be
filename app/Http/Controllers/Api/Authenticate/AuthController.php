@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Authenticate;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CustomerRegisterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use DB;
@@ -79,9 +80,9 @@ class AuthController extends Controller
         }
     }
 
-    public function signup(Request $request){
+    public function signup(CustomerRegisterRequest $request){
         try {
-            $data = $request->all();
+            $data = $request->validated();
 
             $customerData = [
                 'customer_name' => $data['customer_name'],
