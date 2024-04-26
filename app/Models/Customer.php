@@ -49,4 +49,8 @@ class Customer extends Authenticatable
     protected $casts = [
         'password' => 'hashed',
     ];
+
+    public function staff(){
+        return $this->belongsTo(User::class, 'responsible_staff', 'id');
+    }
 }

@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerRequest;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Traits\Helpers\ApiResponseTrait;
+use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 
@@ -18,7 +19,7 @@ class CustomerManagementController extends Controller
     public function list(Request $request)
     {
         try {
-            $customers = Customer::where('status', 1);
+            $customers = new Customer();
             $keyword = $request->keyword;
             if (!empty($keyword)) {
                 $customers = $customers->where('customer_name', 'like', "%$keyword%");
@@ -45,10 +46,11 @@ class CustomerManagementController extends Controller
     public function detail(Request $request, $id)
     {
         try {
-            $customer = Customer::findOrFail($id);
+            $customer = Customer::with('staff')->findOrFail($id);
             return $this->success($customer);
         } catch (\Throwable $e) {
             Log::error($e);
+            $message = 'Lỗi khi truy vấn cửa hàng';
             if ($e instanceof ModelNotFoundException) {
                 $message = 'Không tìm thấy cửa hàng này!';
             }
