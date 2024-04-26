@@ -19,7 +19,7 @@ class CustomerManagementController extends Controller
     public function list(Request $request)
     {
         try {
-            $customers = new Customer();
+            $customers = Customer::with('staff');
             $keyword = $request->keyword;
             if (!empty($keyword)) {
                 $customers = $customers->where('customer_name', 'like', "%$keyword%");
