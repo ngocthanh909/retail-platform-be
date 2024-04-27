@@ -25,7 +25,11 @@ use App\Http\Controllers\Api\Manager\ProductManagementController;
 
 Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(function () {
     Route::prefix('account')->group(function(){
-        Route::post('create', [AccountController::class, 'createUser']);
+        Route::post('create', [AccountController::class, 'create']);
+        Route::get('list', [AccountController::class, 'list']);
+        Route::get('{id}', [AccountController::class, 'detail']);
+        Route::post('{id}/edit', [AccountController::class, 'edit']);
+        Route::post('/{id}/delete', [AccountController::class, 'delete']);
     });
     Route::prefix('customer')->group(function(){
         Route::get('list', [CustomerManagementController::class, 'list']);
@@ -55,12 +59,16 @@ Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,emp
     Route::get('customer', [CustomerManagementController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
     Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
-
-    Route::prefix('order')->group(function(){
-        Route::post('calculate', [OrderController::class, 'calculateOrder']);
-    });
-
 });
+Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+    Route::post('calculate', [OrderController::class, 'calculateOrder']);
+    Route::post('checkout', [OrderController::class, 'checkout']);
+    Route::get('list', [OrderController::class, 'list']);
+    Route::get('{id}', [OrderController::class, 'detail']);
+    Route::post('{id}/edit', [OrderController::class, 'edit']);
+    Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
+});
+
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

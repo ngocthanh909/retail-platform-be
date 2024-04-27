@@ -24,7 +24,11 @@ class User extends Authenticatable
         'email',
         'password',
         'phone',
-        'is_admin'
+        'is_admin',
+        'dob',
+        'avatar',
+        'address',
+        'gender'
     ];
 
     /**
@@ -46,4 +50,8 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function customers(){
+       return $this->hasMany(Customer::class, 'responsible_staff', 'id');
+    }
 }
