@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Authenticate\AuthController;
 use App\Http\Controllers\Api\Common\OrderController;
+use App\Http\Controllers\Api\Manager\BannerController;
 use App\Http\Controllers\Api\Manager\CategoryManagementController;
 use App\Http\Controllers\Api\Manager\ProductManagementController;
 
@@ -53,10 +54,17 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('/{id}/delete', [ProductManagementController::class, 'delete']);
         Route::post('/{id}/disable', [ProductManagementController::class, 'disable']);
     });
+
+    Route::prefix('banner')->group(function(){
+        Route::get('list', [BannerController::class, 'list']);
+        Route::post('create', [BannerController::class, 'create']);
+        Route::post('/{id}/delete', [BannerController::class, 'delete']);
+    });
 });
 Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
     Route::get('customer', [CustomerManagementController::class, 'list']);
+    Route::get('banners', [BannerController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
     Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
 });
