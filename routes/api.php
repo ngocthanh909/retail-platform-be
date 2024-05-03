@@ -81,6 +81,7 @@ Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,custom
 });
 Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
+    Route::get('employee', [AccountController::class, 'listAllEmployee']);
     Route::get('customer', [CustomerManagementController::class, 'list']);
     Route::get('banners', [BannerController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
