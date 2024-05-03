@@ -9,7 +9,9 @@ use App\Http\Controllers\Api\Authenticate\AuthController;
 use App\Http\Controllers\Api\Common\OrderController;
 use App\Http\Controllers\Api\Manager\BannerController;
 use App\Http\Controllers\Api\Manager\CategoryManagementController;
+use App\Http\Controllers\Api\Manager\NotificationController;
 use App\Http\Controllers\Api\Manager\ProductManagementController;
+use App\Http\Controllers\Api\Manager\ReportManagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -60,6 +62,21 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('create', [BannerController::class, 'create']);
         Route::post('/{id}/delete', [BannerController::class, 'delete']);
     });
+
+    Route::prefix('notification')->group(function(){
+        Route::post('create', [NotificationController::class, 'create']);
+    });
+    Route::prefix('report')->group(function(){
+        Route::get('revenue-by-time', [ReportManagementController::class, 'reportRevenueByTime']);
+        Route::get('revenue-by-employee', [ReportManagementController::class, 'reportRevenueByEmployee']);
+    });
+});
+Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+    Route::get('category', [CategoryManagementController::class, 'listAll']);
+    Route::get('customer', [CustomerManagementController::class, 'list']);
+    Route::get('banners', [BannerController::class, 'list']);
+    Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
+    Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
 });
 Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);

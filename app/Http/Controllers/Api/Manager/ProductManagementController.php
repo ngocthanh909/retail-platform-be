@@ -214,11 +214,14 @@ class ProductManagementController extends Controller
     public function disable(Request $request, $id)
     {
         try {
-            $disable = Product::where('id', $id)->update(['status' => 0]);
-            if($disable){
-                throw new Exception('Xóa sản phẩm thất bại');
+            $product = Product::findOrFail($id);
+            if($product->status == 1){
+                $product->status = 0;
+                return $this->success([], 'Ngừng kinh doanh sản phẩm thành công');
+            } else {
+                $product->status = 1;
+                return $this->success([], 'Tiếp tục kinh doanh sản phẩm thành công');
             }
-            return $this->success([], 'Ngừng kinh doanh sản phẩm thành công');
         } catch (\Throwable $e) {
             Log::error($e);
             $message = 'Lỗi khi ngừng kinh doanh sản phẩm';
