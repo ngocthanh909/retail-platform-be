@@ -35,7 +35,7 @@ class OrderController extends Controller
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
-            if($e instanceof ModelNotFoundException){
+            if ($e instanceof ModelNotFoundException) {
                 return $this->failure('Không tìm thấy đơn hàng này', $e->getMessage());
             }
             return $this->failure('Lỗi truy vấn đơn hàng', $e->getMessage());
@@ -83,11 +83,11 @@ class OrderController extends Controller
                 'note' => $data['note'] ?? '',
                 'status' => 1
             ]);
-            if(!$order->save()) throw new Exception('Lỗi trong quá trình tạo đơn hàng');
+            if (!$order->save()) throw new Exception('Lỗi trong quá trình tạo đơn hàng');
 
             $orderDetails = [];
 
-            foreach($responseData['products'] ?? [] as $product){
+            foreach ($responseData['products'] ?? [] as $product) {
                 $orderDetails[] = [
                     'order_id' => $order->id,
                     'product_id' => $product['id'],
@@ -98,7 +98,7 @@ class OrderController extends Controller
                     'discount' => 0
                 ];
             }
-            if(!OrderDetail::insert($orderDetails)){
+            if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi tạo chi tiết đơn hàng');
             };
             DB::commit();
@@ -140,12 +140,12 @@ class OrderController extends Controller
                 'note' => $data['note'] ?? '',
                 'status' => $data['status'] ?? $order->status
             ]);
-            if(!$order->save()) throw new Exception('Lỗi trong quá trình cập nhật đơn hàng');
+            if (!$order->save()) throw new Exception('Lỗi trong quá trình cập nhật đơn hàng');
 
             $orderDetails = [];
             OrderDetail::where('order_id', $order->id)->delete();
 
-            foreach($responseData['products'] ?? [] as $product){
+            foreach ($responseData['products'] ?? [] as $product) {
                 $orderDetails[] = [
                     'order_id' => $order->id,
                     'product_id' => $product['id'],
@@ -153,10 +153,12 @@ class OrderController extends Controller
                     'product_name' => $product['product_name'],
                     'price' => $product['price'],
                     'qty' => $product['qty'],
+                    'total' => $product['price'] * $product['qty'],
+                    'product_image' => $product['product_image'],
                     'discount' => 0
                 ];
             }
-            if(!OrderDetail::insert($orderDetails)){
+            if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi cập nhật chi tiết đơn hàng');
             };
             DB::commit();
@@ -170,25 +172,27 @@ class OrderController extends Controller
     }
 
 
-    public function changeStatus(Request $request, $id){
+    public function changeStatus(Request $request, $id)
+    {
         try {
-            if(((int)$request->status < 0) || ((int)$request->status > 3)){
+            if (((int)$request->status < 0) || ((int)$request->status > 3)) {
                 return $this->failure('Trạng thái không hợp lệ');
             }
             $orderUpdate = Order::with('details')->where('id', $id)->update(['status' => $request['status']]);
-            if(!$orderUpdate){
+            if (!$orderUpdate) {
                 return $this->failure('Lỗi cập nhật đơn hàng');
             }
             return $this->success(Order::with('details')->findOrFail($id), 'Sửa trạng thái thành công');
         } catch (\Throwable $e) {
             Log::error($e);
-            if($e instanceof ModelNotFoundException){
+            if ($e instanceof ModelNotFoundException) {
                 return $this->failure('Không tìm thấy đơn hàng này', $e->getMessage());
             }
             return $this->failure('Lỗi cập nhật đơn hàng', $e->getMessage());
         }
     }
-    public function calculate($data, $user){
+    public function calculate($data, $user)
+    {
         try {
             $rawProducts = $data['products'] ?? [];
             $products = [];
@@ -216,10 +220,10 @@ class OrderController extends Controller
             if (count($rawProducts) > 0) {
                 foreach ($rawProducts as $rawProduct) {
                     $product = Product::find($rawProduct['id']);
-                    if(!$product){
+                    if (!$product) {
                         throw new Exception("Không tìm thấy sản phẩm trong danh sách");
                     }
-                    $tempPrice = $product->price + ($isGuest ? ($product->price * ((int)(Config::getConfig('discount_rate') ?? 0)) / 100): 0);
+                    $tempPrice = $product->price + ($isGuest ? ($product->price * ((int)(Config::getConfig('discount_rate') ?? 0)) / 100) : 0);
                     $tempTotal = $tempPrice * $rawProduct['qty'];
                     $products[] = [
                         'id' => $product->id,
@@ -227,7 +231,9 @@ class OrderController extends Controller
                         'product_image' => $product->product_image,
                         'price' => $tempPrice,
                         'total' => $tempTotal,
-                        'qty' => $rawProduct['qty']
+                        'qty' => $rawProduct['qty'],
+                        'total' => $product->price * $product->qty,
+                        'product_image' => $product->product_image,
                     ];
 
                     $subTotal += $tempTotal;
@@ -248,40 +254,41 @@ class OrderController extends Controller
         }
     }
 
-    public function list(Request $request){
+    public function list(Request $request)
+    {
         $query = new Order();
         $user = $request->user();
-        if($user->tokenCan('customer')){
+        if ($user->tokenCan('customer')) {
             $query = $query->where('customer_id', $user->id);
         } else {
-            if($request->customer_id){
+            if ($request->customer_id) {
                 $query = $query->where('customer_id', $request->customer_id);
             }
         }
-        if($request->id){
+        if ($request->id) {
             $query = $query->where('id', 'like', '%' . $request->id . '%');
         }
-        if($request->responsible_staff){
+        if ($request->responsible_staff) {
             $query = $query->where('responsible_staff', $request->responsible_staff);
         }
-        if($request->creator){
+        if ($request->creator) {
             $query = $query->where('creator', $request->creator);
         }
 
-        if($request->min_price){
+        if ($request->min_price) {
             $query = $query->where('total', '>=', $request->min_price);
         }
-        if($request->max_price){
+        if ($request->max_price) {
             $query = $query->where('total', '<=', $request->max_price);
         }
 
-        if($request->min_date){
+        if ($request->min_date) {
             $query = $query->where('created_at', '>=', $request->min_date);
         }
-        if($request->max_date){
+        if ($request->max_date) {
             $query = $query->where('created_at', '<=', $request->max_date);
         }
-        if($request->status){
+        if ($request->status) {
             $query = $query->where('status', $request->status);
         }
 
