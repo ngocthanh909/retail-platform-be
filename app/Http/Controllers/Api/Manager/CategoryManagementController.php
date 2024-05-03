@@ -7,6 +7,7 @@ use App\Http\Requests\CategoryRequest;
 use Illuminate\Http\Request;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -139,10 +140,12 @@ class CategoryManagementController extends Controller
         try {
             $category = Category::findOrFail($id);
             if($category->status == 1){
+                Product::where('category_id', $id)->update(['status' => 0]);
                 $category->status = 0;
                 return $this->success([], 'Ngừng kinh doanh ngành hàng thành công');
             } else {
                 $category->status = 1;
+                Product::where('category_id', $id)->update(['status' => 1]);
                 return $this->success([], 'Tiếp tục kinh doanh ngành hàng thành công');
             }
         } catch (\Throwable $e) {
