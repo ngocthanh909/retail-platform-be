@@ -231,6 +231,7 @@ class OrderController extends Controller
                     $products[] = [
                         'id' => $product->id,
                         'product_name' => $product->product_name,
+                        'sku' => $product->sku ?? '',
                         'product_image' => $product->product_image,
                         'price' => $tempPrice,
                         'total' => $tempTotal,
