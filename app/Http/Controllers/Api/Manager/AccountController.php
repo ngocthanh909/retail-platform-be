@@ -151,7 +151,14 @@ class AccountController extends Controller
     }
 
     function listAllEmployee(){
-        return User::where('is_admin', 0)->get();
+
+        try {
+            return $this->success(User::where('is_admin', 0)->get());
+        } catch (\Exception $e) {
+            Log::error($e);
+            return $this->failure('Lỗi khi lấy danh sách nhân viên');
+        }
+
     }
 
 }
