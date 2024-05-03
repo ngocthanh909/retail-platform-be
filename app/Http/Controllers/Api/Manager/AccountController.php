@@ -151,7 +151,7 @@ class AccountController extends Controller
     }
 
     function listAllEmployee(){
-        return User::where('status', 1)->where('is_admin', 0)->get();
+        return User::where('is_admin', 0)->get();
     }
 
 }
