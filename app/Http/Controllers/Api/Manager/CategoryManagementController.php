@@ -133,4 +133,25 @@ class CategoryManagementController extends Controller
             return $this->failure($message, $e->getMessage());
         }
     }
+
+    public function disable(Request $request, $id)
+    {
+        try {
+            $category = Category::findOrFail($id);
+            if($category->status == 1){
+                $category->status = 0;
+                return $this->success([], 'Ngừng kinh doanh ngành hàng thành công');
+            } else {
+                $category->status = 1;
+                return $this->success([], 'Tiếp tục kinh doanh ngành hàng thành công');
+            }
+        } catch (\Throwable $e) {
+            Log::error($e);
+            $message = 'Lỗi khi ngừng kinh doanh ngành hàng';
+            if ($e instanceof ModelNotFoundException) {
+                $message = 'Không tìm thấy ngành này!';
+            }
+            return $this->failure($message, $e->getMessage());
+        }
+    }
 }

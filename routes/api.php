@@ -47,6 +47,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::get('{id}', [CategoryManagementController::class, 'detail']);
         Route::post('/{id}/edit', [CategoryManagementController::class, 'update']);
         Route::post('/{id}/delete', [CategoryManagementController::class, 'delete']);
+        Route::post('/{id}/disable', [CategoryManagementController::class, 'disable']);
     });
     Route::prefix('product')->group(function(){
         Route::get('list', [ProductManagementController::class, 'list']);
