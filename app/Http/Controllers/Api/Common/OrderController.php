@@ -31,7 +31,7 @@ class OrderController extends Controller
     public function detail(Request $request, $id)
     {
         try {
-            $order = Order::with('details')->findOrFail($id);
+            $order = Order::with(['details', 'staff'])->findOrFail($id);
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
