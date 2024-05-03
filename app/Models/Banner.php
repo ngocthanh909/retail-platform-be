@@ -16,8 +16,12 @@ class Banner extends Model
 
     protected function image(): Attribute
     {
-        return Attribute::make(
-            get: fn (string $value) => asset(Storage::url($value))
-        );
+        if($this->getRawOriginal('image')){
+            return Attribute::make(
+                get: fn (string $value) => asset(Storage::url($value))
+            );
+        }
+        return Attribute::make(get: fn () => '');
+
     }
 }

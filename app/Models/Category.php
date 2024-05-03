@@ -15,8 +15,12 @@ class Category extends Model
 
     protected function categoryImage(): Attribute
     {
-        return Attribute::make(
-            get: fn (string $value) => asset(Storage::url($value))
-        );
+        if($this->getRawOriginal('category_image')){
+            return Attribute::make(
+                get: fn (string $value) => asset(Storage::url($value))
+            );
+        }
+        return Attribute::make(get: fn () => '');
+
     }
 }

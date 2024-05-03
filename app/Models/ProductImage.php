@@ -16,8 +16,12 @@ class ProductImage extends Model
 
     protected function productImage(): Attribute
     {
-        return Attribute::make(
-            get: fn (string $value) => asset(Storage::url($value))
-        );
+        if($this->getRawOriginal('product_image')){
+            return Attribute::make(
+                get: fn (string $value) => asset(Storage::url($value))
+            );
+        }
+        return Attribute::make(get: fn () => '');
+
     }
 }
