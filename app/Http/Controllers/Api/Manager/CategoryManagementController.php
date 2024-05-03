@@ -142,10 +142,12 @@ class CategoryManagementController extends Controller
             if($category->status == 1){
                 Product::where('category_id', $id)->update(['status' => 0]);
                 $category->status = 0;
+                $category->save();
                 return $this->success([], 'Ngừng kinh doanh ngành hàng thành công');
             } else {
                 $category->status = 1;
                 Product::where('category_id', $id)->update(['status' => 1]);
+                $category->save();
                 return $this->success([], 'Tiếp tục kinh doanh ngành hàng thành công');
             }
         } catch (\Throwable $e) {

@@ -217,9 +217,11 @@ class ProductManagementController extends Controller
             $product = Product::findOrFail($id);
             if($product->status == 1){
                 $product->status = 0;
+                $product->save();
                 return $this->success([], 'Ngừng kinh doanh sản phẩm thành công');
             } else {
                 $product->status = 1;
+                $product->save();
                 return $this->success([], 'Tiếp tục kinh doanh sản phẩm thành công');
             }
         } catch (\Throwable $e) {
