@@ -95,14 +95,16 @@ class OrderController extends Controller
                     'product_name' => $product['product_name'],
                     'price' => $product['price'],
                     'qty' => $product['qty'],
-                    'discount' => 0
+                    'discount' => 0,
+                    'total' => $product['price'] * $product['qty'],
+                    'product_image' => $product['product_image'],
                 ];
             }
             if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi tạo chi tiết đơn hàng');
             };
             DB::commit();
-            $order = $order->with('details')->get();
+            $order = $order->load('details');
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -162,7 +164,7 @@ class OrderController extends Controller
                 throw new Exception('Lỗi khi cập nhật chi tiết đơn hàng');
             };
             DB::commit();
-            $order = $order->with('details')->get();
+            $order = $order->load('details');
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -220,6 +222,7 @@ class OrderController extends Controller
             if (count($rawProducts) > 0) {
                 foreach ($rawProducts as $rawProduct) {
                     $product = Product::find($rawProduct['id']);
+
                     if (!$product) {
                         throw new Exception("Không tìm thấy sản phẩm trong danh sách");
                     }
@@ -232,13 +235,15 @@ class OrderController extends Controller
                         'price' => $tempPrice,
                         'total' => $tempTotal,
                         'qty' => $rawProduct['qty'],
-                        'total' => $product->price * $product->qty,
-                        'product_image' => $product->product_image,
+                        'total' => $product->price * $rawProduct['qty'],
+                        'product_image' => $product->getRawOriginal('product_image'),
                     ];
+
 
                     $subTotal += $tempTotal;
                 }
             }
+
             $total = $subTotal;
             $responseData = [
                 'products' => $products,
