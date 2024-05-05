@@ -9,6 +9,7 @@ use App\Http\Requests\OrderEditRequest;
 use App\Http\Requests\OrderRequest;
 use Illuminate\Http\Request;
 use App\Http\Traits\Helpers\ApiResponseTrait;
+use App\Http\Traits\Helpers\NotificationTrait;
 use App\Models\Category;
 use App\Models\Config;
 use App\Models\Customer;
@@ -26,7 +27,7 @@ use Illuminate\Support\Str;
 
 class OrderController extends Controller
 {
-    use ApiResponseTrait;
+    use ApiResponseTrait, NotificationTrait;
 
     public function detail(Request $request, $id)
     {
@@ -51,7 +52,7 @@ class OrderController extends Controller
             return $this->success($responseData);
         } catch (\Throwable $e) {
             Log::error($e);
-            return $this->failure('Lỗi khi tạo đơn hàng', $e->getMessage());
+            return $this->failure('Lỗi khi tính giá trị đơn hàng', $e->getMessage());
         }
     }
 
@@ -67,14 +68,14 @@ class OrderController extends Controller
 
 
             $order = new Order([
-                'customer_id' => $customer->id,
-                'responsible_staff' => $customer->responsible_staff,
+                'customer_id' => $customer->id ?? 0,
+                'responsible_staff' => $customer->responsible_staff ?? 0,
                 'creator' => ($user->tokenCan('admin') || $user->tokenCan('employee')) ? $user->id : '',
-                'customer_name' => $customer->customer_name,
-                'phone' => $customer->phone,
-                'province' => $customer->province,
-                'district' => $customer->district,
-                'address' => $customer->address,
+                'customer_name' => $customer->customer_name ?? ($request->customer_name ?? ''),
+                'phone' => $customer->phone ?? ($request->customer_phone ?? ''),
+                'province' => $customer->province ?? '',
+                'district' => $customer->district ?? '',
+                'address' => $customer->address ?? ($request->customer_address ?? ''),
                 'subtotal' => $responseData['subtotal'],
                 'total' => $responseData['total'],
                 'discount_code' => $request->discount_code,
@@ -105,10 +106,12 @@ class OrderController extends Controller
             };
             DB::commit();
             $order = $order->load('details');
+            $this->sendCustomerNotification($order->customer_id, 'Đặt hàng thành công', 'Đơn hàng của bạn đã được tạo thành công. Mã đơn hàng của bạn là '. $order->displayId);
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
             DB::rollBack();
+            dd($e);
             return $this->failure('Lỗi khi tạo đơn hàng', $e->getMessage());
         }
     }
@@ -165,6 +168,7 @@ class OrderController extends Controller
             };
             DB::commit();
             $order = $order->load('details');
+            $this->sendCustomerNotification($order->customer_id, 'Sửa đơn hàng thành công', 'Đơn hàng của bạn đã được chỉnh sửa');
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -184,6 +188,8 @@ class OrderController extends Controller
             if (!$orderUpdate) {
                 return $this->failure('Lỗi cập nhật đơn hàng');
             }
+
+            $this->sendCustomerNotification(Order::find($id)?->customer_id, 'Đơn hàng của bạn ' . Order::ORDER_STATUS[$request->status], 'Đơn hàng của bạn đang trong trạng thái ' . Order::ORDER_STATUS[$request->status]);
             return $this->success(Order::with('details')->findOrFail($id), 'Sửa trạng thái thành công');
         } catch (\Throwable $e) {
             Log::error($e);
@@ -211,7 +217,7 @@ class OrderController extends Controller
             } else {
                 //Check logic customer is a member or not
                 $customer = Customer::find($data['customer_id']);
-                if (!$customer) {
+                if (($data['customer_id'] != 0) && !$customer) {
                     throw new Exception("Không tìm thấy cửa hàng này");
                 }
                 if (empty($customer?->responsible_staff)) {
@@ -222,7 +228,6 @@ class OrderController extends Controller
             if (count($rawProducts) > 0) {
                 foreach ($rawProducts as $rawProduct) {
                     $product = Product::find($rawProduct['id']);
-
                     if (!$product) {
                         throw new Exception("Không tìm thấy sản phẩm trong danh sách");
                     }
@@ -239,8 +244,6 @@ class OrderController extends Controller
                         'total' => $product->price * $rawProduct['qty'],
                         'product_image' => $product->getRawOriginal('product_image'),
                     ];
-
-
                     $subTotal += $tempTotal;
                 }
             }

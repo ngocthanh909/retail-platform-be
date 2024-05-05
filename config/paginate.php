@@ -6,5 +6,7 @@ return [
     'store_list' => 10,
     'category' => 15,
     'product' => 15,
-    'order' => 10
+    'order' => 10,
+    'notification' => 10,
+    'paginate' => 10
 ];

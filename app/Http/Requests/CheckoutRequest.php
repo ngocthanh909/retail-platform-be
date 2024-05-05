@@ -23,6 +23,9 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'customer_id' => 'required|numeric',
+            'customer_name' => request()->customer_id == 0 ? 'required' : '',
+            'customer_address' => request()->customer_id == 0 ? 'required' : '',
+            'customer_phone' => request()->customer_id == 0 ? 'required' : '',
             'products' => 'required|array',
             'discount_code' => 'nullable',
             'note' => 'nullable'

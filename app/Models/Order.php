@@ -15,6 +15,13 @@ class Order extends Authenticatable
     protected $table = "orders";
     protected $appends = ["displayId"];
 
+    const ORDER_STATUS = [
+        0 => 'Đã hủy',
+        1 => 'Chờ xác nhận',
+        2 => 'Đã xác nhận',
+        3 => 'Hoàn thành'
+    ];
+
     /**
      * The attributes that are mass assignable.
      *

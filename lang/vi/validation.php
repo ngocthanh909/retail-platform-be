@@ -167,6 +167,9 @@ return [
         'product_name'          => 'tên sản phẩm',
         'category_name'         => 'mã sản phẩm',
         'products' => 'sản phẩm',
+        'customer_name' => 'Tên khách hàng',
+        'customer_address' => 'Địa chỉ khách hàng',
+        'customer_phone' => 'SĐT khách hàng',
 
         //Địa chỉ
         'province' => 'tỉnh/thành phố',
@@ -176,6 +179,7 @@ return [
         'price' => 'giá',
         'status' => 'trạng thái',
         //category
-        'category_name' => 'tên ngành hàng'
+        'category_name' => 'tên ngành hàng',
+
     ],
 ];

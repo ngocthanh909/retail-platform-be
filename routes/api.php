@@ -9,9 +9,12 @@ use App\Http\Controllers\Api\Authenticate\AuthController;
 use App\Http\Controllers\Api\Common\OrderController;
 use App\Http\Controllers\Api\Manager\BannerController;
 use App\Http\Controllers\Api\Manager\CategoryManagementController;
-use App\Http\Controllers\Api\Manager\NotificationController;
+use App\Http\Controllers\Api\Manager\NotificationManagerController;
+use App\Http\Controllers\Api\Common\NotificationController;
 use App\Http\Controllers\Api\Manager\ProductManagementController;
+use App\Http\Controllers\Api\Manager\PromotionManagementController;
 use App\Http\Controllers\Api\Manager\ReportManagementController;
+use App\Models\Notification;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,20 +67,24 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('/{id}/delete', [BannerController::class, 'delete']);
     });
 
+    Route::prefix('promotion')->group(function(){
+        Route::get('/', [PromotionManagementController::class, 'list']);
+        Route::post('create', [PromotionManagementController::class, 'create']);
+        Route::get('/{id}', [PromotionManagementController::class, 'detail']);
+        Route::post('/{id}/delete', [PromotionManagementController::class, 'delete']);
+        Route::post('/{id}edit', [PromotionManagementController::class, 'edit']);
+    });
     Route::prefix('notification')->group(function(){
-        Route::post('create', [NotificationController::class, 'create']);
+        Route::post('create', [NotificationManagerController::class, 'create']);
     });
     Route::prefix('report')->group(function(){
-        Route::get('revenue-by-time', [ReportManagementController::class, 'reportRevenueByTime']);
-        Route::get('revenue-by-employee', [ReportManagementController::class, 'reportRevenueByEmployee']);
+        Route::get('/', [ReportManagementController::class, 'report']);
     });
 });
 Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
-    Route::get('category', [CategoryManagementController::class, 'listAll']);
-    Route::get('customer', [CustomerManagementController::class, 'list']);
-    Route::get('banners', [BannerController::class, 'list']);
-    Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
-    Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
+    Route::get('get', [NotificationController::class, 'getList']);
+    Route::post('seen', [NotificationController::class, 'seenAction']);
+    Route::post('delete', [NotificationController::class, 'deleteAction']);
 });
 Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
