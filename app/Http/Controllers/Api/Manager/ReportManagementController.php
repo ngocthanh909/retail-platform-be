@@ -59,8 +59,14 @@ class ReportManagementController extends Controller
                 $condition .= empty($condition) ? "where customer_id = $store" : "and customer_id = $store";
             }
 
+            $employeeCondition = $condition;
+            $employee = $request->employee ?? 0;
+            if (!empty($employee)) {
+                $employeeCondition .= empty($employeeCondition) ? "where responsible_staff = '$employee' or u.name like '%$employee%'" : "and responsible_staff = '$employee' or u.name like '%$employee%'";
+            }
+
             $sqlRevenueByTime = "select DATE(created_at) as date, count(id) as number_of_order, sum(total) as total, count(case when status = 0 then id END) as cancelled from orders o $condition group by DATE(created_at)";
-            $sqlRevenueByEmployee = "select sum(o.total) as total, u.name, u.id, count(o.id) as number_of_order  from orders o inner join users u on o.responsible_staff = u.id $condition group by responsible_staff;";
+            $sqlRevenueByEmployee = "select sum(o.total) as total, u.name, u.id, count(o.id) as number_of_order  from orders o inner join users u on o.responsible_staff = u.id $employeeCondition group by responsible_staff;";
 
             $revenueByTime = DB::select($sqlRevenueByTime);
             $sqlRevenueByEmployee = DB::select($sqlRevenueByEmployee);
