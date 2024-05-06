@@ -71,7 +71,20 @@ class ReportManagementController extends Controller
             $revenueByTime = DB::select($sqlRevenueByTime);
             $sqlRevenueByEmployee = DB::select($sqlRevenueByEmployee);
 
-            return $this->success(["revenue_by_time" => $revenueByTime, 'revenue_by_employee' => $sqlRevenueByEmployee]);
+            $overallReportSql = "
+            select
+                count(o.id) as number_of_order,
+                sum(o.total) as order_value,
+                case
+                    when o.status = 0 then 'active'
+                    WHEN o.status  <> 0 THEN 'cancelled'
+                end as order_status
+            from orders o $condition
+            group by order_status;";
+
+            $overallReport = DB::select($overallReportSql);
+
+            return $this->success(["revenue_by_time" => $revenueByTime, 'revenue_by_employee' => $sqlRevenueByEmployee, 'overall' => $overallReport]);
         } catch (\Throwable $e) {
             Log::error($e);
             return $this->failure("Lỗi lấy báo cáo", $e->getMessage());
