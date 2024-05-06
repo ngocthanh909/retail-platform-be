@@ -98,9 +98,9 @@ Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,empl
     Route::post('calculate', [OrderController::class, 'calculateOrder']);
     Route::post('checkout', [OrderController::class, 'checkout']);
     Route::get('list', [OrderController::class, 'list']);
+    Route::post('change_status', [OrderController::class, 'changeStatus']);
     Route::get('{id}', [OrderController::class, 'detail']);
     Route::post('{id}/edit', [OrderController::class, 'edit']);
-    Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
 });
 
 Route::prefix('auth')->group(function () {

@@ -178,20 +178,27 @@ class OrderController extends Controller
     }
 
 
-    public function changeStatus(Request $request, $id)
+    public function changeStatus(Request $request)
     {
+        $ids = $request->ids ?? [];
+        DB::beginTransaction();
         try {
-            if (((int)$request->status < 0) || ((int)$request->status > 3)) {
-                return $this->failure('Trạng thái không hợp lệ');
+            $successCount = 0;
+            foreach($ids as $id){
+                if (((int)$request->status < 0) || ((int)$request->status > 3)) {
+                    return $this->failure('Trạng thái không hợp lệ');
+                }
+                $orderUpdate = Order::with('details')->where('id', $id)->update(['status' => $request['status']]);
+                if (!is_numeric($orderUpdate)) {
+                    return $this->failure('Lỗi cập nhật đơn hàng');
+                }
+                $successCount++;
+                $this->sendCustomerNotification(Order::find($id)?->customer_id, 'Đơn hàng của bạn ' . Order::ORDER_STATUS[$request->status], 'Đơn hàng của bạn đang trong trạng thái ' . Order::ORDER_STATUS[$request->status]);
             }
-            $orderUpdate = Order::with('details')->where('id', $id)->update(['status' => $request['status']]);
-            if (!$orderUpdate) {
-                return $this->failure('Lỗi cập nhật đơn hàng');
-            }
-
-            $this->sendCustomerNotification(Order::find($id)?->customer_id, 'Đơn hàng của bạn ' . Order::ORDER_STATUS[$request->status], 'Đơn hàng của bạn đang trong trạng thái ' . Order::ORDER_STATUS[$request->status]);
-            return $this->success(Order::with('details')->findOrFail($id), 'Sửa trạng thái thành công');
+            DB::commit();
+            return $this->success([], $successCount .' đơn hàng đã sửa trạng thái thành công');
         } catch (\Throwable $e) {
+            DB::rollback();
             Log::error($e);
             if ($e instanceof ModelNotFoundException) {
                 return $this->failure('Không tìm thấy đơn hàng này', $e->getMessage());
@@ -265,6 +272,7 @@ class OrderController extends Controller
 
     public function list(Request $request)
     {
+        $data = $request->all();
         $query = new Order();
         $user = $request->user();
         if ($user->tokenCan('customer')) {
@@ -297,7 +305,9 @@ class OrderController extends Controller
         if ($request->max_date) {
             $query = $query->where('created_at', '<=', $request->max_date);
         }
-        if ($request->status) {
+
+        if (($data['status'] !== null) && is_numeric($request['status'])) {
+
             $query = $query->where('status', $request->status);
         }
 
