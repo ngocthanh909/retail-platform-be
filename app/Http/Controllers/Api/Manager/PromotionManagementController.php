@@ -27,7 +27,7 @@ class PromotionManagementController extends Controller
             $promotions = $promotions->where('start_date', '>=', $start_date);
         }
         if($end_date){
-            $promotions = $promotions->where('end_date', '>=', $end_date);
+            $promotions = $promotions->where('end_date', '<=', $end_date);
         }
         if($status){
             $promotions = $promotions->where('status', $status);
