@@ -332,7 +332,7 @@ class OrderController extends Controller
             $query = $query->where('created_at', '<=', $request->max_date);
         }
 
-        if (($data['status'] !== null) && is_numeric($request['status'])) {
+        if (($request->status !== null) && is_numeric($request->status)) {
 
             $query = $query->where('status', $request->status);
         }
