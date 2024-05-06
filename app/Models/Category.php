@@ -21,6 +21,8 @@ class Category extends Model
             );
         }
         return Attribute::make(get: fn () => '');
-
+    }
+    public function product(){
+        return $this->hasMany(Product::class, 'category_id', 'id');
     }
 }

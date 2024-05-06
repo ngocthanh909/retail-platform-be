@@ -19,23 +19,25 @@ class PromotionManagementController extends Controller
     function list(Request $request){
         $start_date = $request->start_date;
         $end_date = $request->end_date;
-        $status = $request->status;
-        $promote_type = $request->promote_type;
+        $status = $request->status !== null ? (int)$request->status : null;
 
-        $promotions = Promotion::orderBy('start_date', 'DESC');
+        $promote_type = $request->promote_type;
+        DB::enableQueryLog();
+
+        $promotions = new Promotion();
         if($start_date){
-            $promotions = $promotions->where('start_date', '>=', $start_date);
+            $promotions = $promotions->whereDate('start_date', '>=', $start_date);
         }
         if($end_date){
-            $promotions = $promotions->where('end_date', '<=', $end_date);
+            $promotions = $promotions->whereDate('end_date', '<=', $end_date);
         }
-        if($status){
+        if($status !== null){
             $promotions = $promotions->where('status', $status);
         }
         if($promote_type){
             $promotions = $promotions->where('promote_type', $promote_type);
         }
-        $promotions = $promotions->paginate(config('paginate.promotion'));
+        $promotions = $promotions->orderBy('start_date', 'DESC')->paginate(config('paginate.promotion'));
         //with(['applyProduct', 'applyCustomer'])->
         return $this->success($promotions);
     }
@@ -111,7 +113,7 @@ class PromotionManagementController extends Controller
             }
             // dd($promotionSaved);
             DB::commit();
-            return $this->success($promotion, 'Lưu CTKM thành công');
+            return $this->success($promotion->load(['applyCustomer', 'applyProduct']), 'Lưu CTKM thành công');
         } catch (\Throwable $e) {
             DB::rollBack();
             // dd($e);
@@ -174,6 +176,16 @@ class PromotionManagementController extends Controller
                     }
                     PromotionProduct::insert($products);
                 }
+                if ($data['categories'] && is_array($data['categories'])) {
+                    $categories = [];
+                    foreach ($data['categories'] as $category) {
+                        $products[] = [
+                            'promotion_id' => $promotion->id,
+                            'category_id' => $category
+                        ];
+                    }
+                    PromotionProduct::insert($categories);
+                }
             }
 
             if(!$promotionSaved){
@@ -181,7 +193,7 @@ class PromotionManagementController extends Controller
             }
             // dd($promotionSaved);
             DB::commit();
-            return $this->success($promotion, 'Sửa CTKM thành công');
+            return $this->success($promotion->load(['applyCustomer', 'applyProduct']), 'Sửa CTKM thành công');
         } catch (\Throwable $e) {
             Log::error($e);
             if ($e instanceof ModelNotFoundException) {
@@ -207,7 +219,6 @@ class PromotionManagementController extends Controller
             return $this->success([], 'Xóa CTKM thành công');
         } catch (\Throwable $e) {
             DB::rollBack();
-            dd($e);
             Log::error($e);
             return $this->failure('Xóa chương trình KM thất bại', $e->getMessage());
         }

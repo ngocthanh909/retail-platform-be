@@ -72,7 +72,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('create', [PromotionManagementController::class, 'create']);
         Route::get('/{id}', [PromotionManagementController::class, 'detail']);
         Route::post('/{id}/delete', [PromotionManagementController::class, 'delete']);
-        Route::post('/{id}edit', [PromotionManagementController::class, 'edit']);
+        Route::post('/{id}/edit', [PromotionManagementController::class, 'edit']);
     });
     Route::prefix('notification')->group(function(){
         Route::post('create', [NotificationManagerController::class, 'create']);
@@ -88,6 +88,7 @@ Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,custom
 });
 Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
+    Route::get('category-with-product', [CategoryManagementController::class, 'listAllWithProduct']);
     Route::get('employee', [AccountController::class, 'listAllEmployee']);
     Route::get('customer', [CustomerManagementController::class, 'listAll']);
     Route::get('banners', [BannerController::class, 'list']);
@@ -99,8 +100,8 @@ Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,empl
     Route::post('checkout', [OrderController::class, 'checkout']);
     Route::get('list', [OrderController::class, 'list']);
     Route::post('change_status', [OrderController::class, 'changeMultipleStatus']);
-    Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
     Route::get('{id}', [OrderController::class, 'detail']);
+    Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
     Route::post('{id}/edit', [OrderController::class, 'edit']);
 });
 

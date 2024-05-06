@@ -27,6 +27,11 @@ class CategoryManagementController extends Controller
         return $this->success($categories, 'Lấy danh sách thành công');
     }
 
+    public function listAllWithProduct(Request $request){
+        $categories = Category::with('product')->get();
+        return $this->success($categories, 'Lấy danh sách thành công');
+    }
+
     public function detail(Request $request, $id){
         try {
             $category = Category::findOrFail($id);

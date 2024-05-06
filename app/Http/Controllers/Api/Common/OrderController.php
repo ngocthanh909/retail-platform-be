@@ -111,7 +111,6 @@ class OrderController extends Controller
         } catch (\Throwable $e) {
             Log::error($e);
             DB::rollBack();
-            dd($e);
             return $this->failure('Lỗi khi tạo đơn hàng', $e->getMessage());
         }
     }
