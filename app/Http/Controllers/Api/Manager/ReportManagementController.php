@@ -67,7 +67,8 @@ class ReportManagementController extends Controller
 
             $top = $request->top ?? 10;
             $sqlRevenueByTime = "select DATE(created_at) as date, count(id) as number_of_order, sum(total) as total, count(case when status = 0 then id END) as cancelled from orders o $condition group by DATE(created_at)";
-            $sqlRevenueByEmployee = "select sum(o.total) as total, u.name, u.id, count(o.id) as number_of_order  from orders o inner join users u on o.responsible_staff = u.id $employeeCondition group by responsible_staff;";
+            $sqlRevenueByEmployee = "select sum(o.total) as total, u.name, u.id, count(o.id) as number_of_order  from orders o inner join users u on o.responsible_staff = u.id $employeeCondition group by responsible_staff order by total desc
+            limit $top;";
 
             $revenueByTime = DB::select($sqlRevenueByTime);
             $sqlRevenueByEmployee = DB::select($sqlRevenueByEmployee);
@@ -81,7 +82,7 @@ class ReportManagementController extends Controller
                     WHEN o.status  <> 0 THEN 'cancelled'
                 end as order_status
             from orders o $condition
-            group by order_status limit $top;";
+            group by order_status";
 
             $overallReport = DB::select($overallReportSql);
 
