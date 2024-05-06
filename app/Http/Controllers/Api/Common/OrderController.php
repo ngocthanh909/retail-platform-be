@@ -178,7 +178,33 @@ class OrderController extends Controller
     }
 
 
-    public function changeStatus(Request $request)
+    public function changeStatus(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+
+            if (((int)$request->status < 0) || ((int)$request->status > 3)) {
+                return $this->failure('Trạng thái không hợp lệ');
+            }
+            $orderUpdate = Order::with('details')->where('id', $id)->update(['status' => $request['status']]);
+            if (!is_numeric($orderUpdate)) {
+                return $this->failure('Lỗi cập nhật đơn hàng');
+            }
+            $this->sendCustomerNotification(Order::find($id)?->customer_id, 'Đơn hàng của bạn ' . Order::ORDER_STATUS[$request->status], 'Đơn hàng của bạn đang trong trạng thái ' . Order::ORDER_STATUS[$request->status]);
+
+            DB::commit();
+            return $this->success([], 'Đơn hàng đã sửa trạng thái thành công');
+        } catch (\Throwable $e) {
+            DB::rollback();
+            Log::error($e);
+            if ($e instanceof ModelNotFoundException) {
+                return $this->failure('Không tìm thấy đơn hàng này', $e->getMessage());
+            }
+            return $this->failure('Lỗi cập nhật đơn hàng', $e->getMessage());
+        }
+    }
+
+    public function changeMultipleStatus(Request $request)
     {
         $ids = $request->ids ?? [];
         DB::beginTransaction();

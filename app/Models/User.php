@@ -13,6 +13,7 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
     protected $table = "users";
+    protected $appends = ["displayId"];
 
     /**
      * The attributes that are mass assignable.
@@ -54,4 +55,10 @@ class User extends Authenticatable
     public function customers(){
        return $this->hasMany(Customer::class, 'responsible_staff', 'id');
     }
+
+    public function getDisplayIdAttribute()
+    {
+        return ($this->is_admin ? "ADMIN" : "NV") . str_pad($this->id, 7, 0, STR_PAD_LEFT);
+    }
+
 }
