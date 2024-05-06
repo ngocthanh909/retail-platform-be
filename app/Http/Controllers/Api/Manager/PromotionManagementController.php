@@ -16,8 +16,26 @@ class PromotionManagementController extends Controller
 {
     use ApiResponseTrait;
 
-    function list(){
-        $promotions = Promotion::orderBy('start_date', 'DESC')->paginate(config('paginate.promotion'));
+    function list(Request $request){
+        $start_date = $request->start_date;
+        $end_date = $request->end_date;
+        $status = $request->status;
+        $promote_type = $request->promote_type;
+
+        $promotions = Promotion::orderBy('start_date', 'DESC');
+        if($start_date){
+            $promotions = $promotions->where('start_date', '>=', $start_date);
+        }
+        if($end_date){
+            $promotions = $promotions->where('end_date', '>=', $end_date);
+        }
+        if($status){
+            $promotions = $promotions->where('status', $status);
+        }
+        if($promote_type){
+            $promotions = $promotions->where('promote_type', $promote_type);
+        }
+        $promotions = $promotions->paginate(config('paginate.promotion'));
         //with(['applyProduct', 'applyCustomer'])->
         return $this->success($promotions);
     }
