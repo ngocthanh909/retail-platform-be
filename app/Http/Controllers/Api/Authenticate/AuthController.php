@@ -106,6 +106,10 @@ class AuthController extends Controller
         }
     }
 
+    function info(Request $request){
+        return $this->success($request->user());
+    }
+
     protected function guardManager() {
         return Auth::guard('manager');
     }

@@ -81,6 +81,9 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::get('/', [ReportManagementController::class, 'report']);
     });
 });
+Route::prefix('employee')->middleware(['auth:sanctum', 'ability:employee'])->group(function () {
+
+});
 Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('get', [NotificationController::class, 'getList']);
     Route::post('seen', [NotificationController::class, 'seenAction']);
@@ -94,6 +97,7 @@ Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,emp
     Route::get('banners', [BannerController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
     Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
+    Route::get('user-info', [AuthController::class, 'info']);
 });
 Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::post('calculate', [OrderController::class, 'calculateOrder']);
@@ -104,7 +108,6 @@ Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,empl
     Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
     Route::post('{id}/edit', [OrderController::class, 'edit']);
 });
-
 Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
