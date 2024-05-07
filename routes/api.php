@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Common\PromotionController;
 use App\Http\Controllers\Api\Manager\AccountController;
 use App\Http\Controllers\Api\Manager\CustomerManagementController;
 use App\Http\Controllers\Api\UserController;
@@ -98,6 +99,7 @@ Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,emp
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
     Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
     Route::get('user-info', [AuthController::class, 'info']);
+    Route::get('promotion', [PromotionController::class, 'getUserPromotion']);
 });
 Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::post('calculate', [OrderController::class, 'calculateOrder']);

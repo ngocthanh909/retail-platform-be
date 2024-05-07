@@ -78,8 +78,8 @@ class ReportManagementController extends Controller
                 count(o.id) as number_of_order,
                 sum(o.total) as order_value,
                 case
-                    when o.status = 0 then 'active'
-                    WHEN o.status  <> 0 THEN 'cancelled'
+                    when o.status = 0 then 'cancelled'
+                    WHEN o.status  <> 0 THEN 'active'
                 end as order_status
             from orders o $condition
             group by order_status";
