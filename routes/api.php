@@ -12,9 +12,12 @@ use App\Http\Controllers\Api\Manager\BannerController;
 use App\Http\Controllers\Api\Manager\CategoryManagementController;
 use App\Http\Controllers\Api\Manager\NotificationManagerController;
 use App\Http\Controllers\Api\Common\NotificationController;
+use App\Http\Controllers\Api\Employee\EmployeeProfileController;
+use App\Http\Controllers\Api\Customer\CustomerProfileController;
 use App\Http\Controllers\Api\Manager\ProductManagementController;
 use App\Http\Controllers\Api\Manager\PromotionManagementController;
 use App\Http\Controllers\Api\Manager\ReportManagementController;
+use App\Models\Customer;
 use App\Models\Notification;
 
 /*
@@ -81,9 +84,21 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     Route::prefix('report')->group(function(){
         Route::get('/', [ReportManagementController::class, 'report']);
     });
+    Route::prefix('profile')->group(function(){
+        Route::post("edit", [EmployeeProfileController::class, 'edit']);
+    });
 });
 Route::prefix('employee')->middleware(['auth:sanctum', 'ability:employee'])->group(function () {
-
+    Route::prefix('profile')->group(function(){
+        Route::post("edit", [EmployeeProfileController::class, 'edit']);
+        Route::post("change-password", [EmployeeProfileController::class, 'changePassword']);
+    });
+});
+Route::prefix('customer')->middleware(['auth:sanctum', 'ability:customer'])->group(function () {
+    Route::prefix('profile')->group(function(){
+        Route::post("edit", [CustomerProfileController::class, 'edit']);
+        Route::post("change-password", [CustomerProfileController::class, 'changePassword']);
+    });
 });
 Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('get', [NotificationController::class, 'getList']);

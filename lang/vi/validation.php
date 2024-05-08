@@ -170,6 +170,7 @@ return [
         'customer_name' => 'Tên khách hàng',
         'customer_address' => 'Địa chỉ khách hàng',
         'customer_phone' => 'SĐT khách hàng',
+        'current_password' => 'Mật khẩu hiện tại',
 
         //Địa chỉ
         'province' => 'tỉnh/thành phố',

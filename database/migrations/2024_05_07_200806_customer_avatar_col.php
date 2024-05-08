@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    private $tableName = 'users';
+    private $tableName = 'customers';
     /**
      * Run the migrations.
      */
@@ -15,7 +15,6 @@ return new class extends Migration
         Schema::table($this->tableName, function (Blueprint $table) {
             $table->boolean('gender')->default(true);
             $table->date('dob')->nullable();
-            $table->string('address', 300)->nullable();
             $table->string('avatar', 300)->nullable()->default('');
         });
     }
@@ -25,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropColumns($this->tableName, ['gender', 'dob', 'address', 'avatar']);
+        Schema::dropColumns($this->tableName, ['dob', 'gender', 'avatar']);
     }
 };
