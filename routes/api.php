@@ -105,16 +105,18 @@ Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,custom
     Route::post('seen', [NotificationController::class, 'seenAction']);
     Route::post('delete', [NotificationController::class, 'deleteAction']);
 });
-Route::prefix('common')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+Route::prefix('common')->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
+    Route::get('product-list', [ProductManagementController::class, 'list']);
     Route::get('category-with-product', [CategoryManagementController::class, 'listAllWithProduct']);
-    Route::get('employee', [AccountController::class, 'listAllEmployee']);
     Route::get('customer', [CustomerManagementController::class, 'listAll']);
     Route::get('banners', [BannerController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
-    Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
     Route::get('user-info', [AuthController::class, 'info']);
-    Route::get('promotion', [PromotionController::class, 'getUserPromotion']);
+    Route::middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+        Route::get('employee', [AccountController::class, 'listAllEmployee']);
+        Route::get('promotion', [PromotionController::class, 'getUserPromotion']);
+    });
 });
 Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::post('calculate', [OrderController::class, 'calculateOrder']);
