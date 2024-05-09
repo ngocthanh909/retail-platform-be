@@ -13,6 +13,7 @@ class Product extends Model
     use HasFactory;
     protected $table = 'products';
     protected $fillable = ['product_name', 'product_image', 'description', 'sku', 'category_id', 'price', 'status'];
+    protected $appends = [];
 
     protected function productImage(): Attribute
     {
@@ -40,7 +41,7 @@ class Product extends Model
         return self::with(['category', 'images'])->find($id);
     }
 
-    public static function getMany($filter = null)
+    public static function getMany($filter = null, $activeProductOnly = false)
     {
         $query = self::with(['category']);
 
@@ -49,6 +50,9 @@ class Product extends Model
         }
         if (!empty($filter['category_id'])) {
             $query = $query->where('category_id', $filter['category_id']);
+        }
+        if ($activeProductOnly) {
+            $query = $query->where('status', 1);
         }
         return $query->paginate(config('paginate.product'));
     }

@@ -7,13 +7,16 @@ use App\Http\Controllers\Api\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\Authenticate\AuthController;
+use App\Http\Controllers\Api\Common\CategoryController;
 use App\Http\Controllers\Api\Common\OrderController;
 use App\Http\Controllers\Api\Manager\BannerController;
 use App\Http\Controllers\Api\Manager\CategoryManagementController;
 use App\Http\Controllers\Api\Manager\NotificationManagerController;
 use App\Http\Controllers\Api\Common\NotificationController;
+use App\Http\Controllers\Api\Common\ProductController;
 use App\Http\Controllers\Api\Employee\EmployeeProfileController;
 use App\Http\Controllers\Api\Customer\CustomerProfileController;
+use App\Http\Controllers\Api\Employee\CustomerController;
 use App\Http\Controllers\Api\Manager\ProductManagementController;
 use App\Http\Controllers\Api\Manager\PromotionManagementController;
 use App\Http\Controllers\Api\Manager\ReportManagementController;
@@ -32,6 +35,12 @@ use App\Models\Notification;
 */
 
 // Route::get("users", [UserController::class, "getUser"]);
+
+Route::prefix('auth')->group(function () {
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::post('signup', [AuthController::class, 'signup']);
+});
 
 Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(function () {
     Route::prefix('account')->group(function(){
@@ -64,13 +73,11 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('/{id}/delete', [ProductManagementController::class, 'delete']);
         Route::post('/{id}/disable', [ProductManagementController::class, 'disable']);
     });
-
     Route::prefix('banner')->group(function(){
         Route::get('list', [BannerController::class, 'list']);
         Route::post('create', [BannerController::class, 'create']);
         Route::post('/{id}/delete', [BannerController::class, 'delete']);
     });
-
     Route::prefix('promotion')->group(function(){
         Route::get('/', [PromotionManagementController::class, 'list']);
         Route::post('create', [PromotionManagementController::class, 'create']);
@@ -88,11 +95,19 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post("edit", [EmployeeProfileController::class, 'edit']);
     });
 });
+//Thông báo
+Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+    Route::get('get', [NotificationController::class, 'getList']);
+    Route::post('seen', [NotificationController::class, 'seenAction']);
+    Route::post('delete', [NotificationController::class, 'deleteAction']);
+});
+//Group quản lý profile
 Route::prefix('employee')->middleware(['auth:sanctum', 'ability:employee'])->group(function () {
     Route::prefix('profile')->group(function(){
         Route::post("edit", [EmployeeProfileController::class, 'edit']);
         Route::post("change-password", [EmployeeProfileController::class, 'changePassword']);
     });
+    Route::get('managed-customer', [CustomerController::class, 'listManagedByMe']);
 });
 Route::prefix('customer')->middleware(['auth:sanctum', 'ability:customer'])->group(function () {
     Route::prefix('profile')->group(function(){
@@ -100,11 +115,31 @@ Route::prefix('customer')->middleware(['auth:sanctum', 'ability:customer'])->gro
         Route::post("change-password", [CustomerProfileController::class, 'changePassword']);
     });
 });
-Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
-    Route::get('get', [NotificationController::class, 'getList']);
-    Route::post('seen', [NotificationController::class, 'seenAction']);
-    Route::post('delete', [NotificationController::class, 'deleteAction']);
+//Group common
+Route::prefix('product')->group(function(){
+    Route::get('/list', [ProductController::class, 'list']);
+    Route::get('/list-for-manager', [ProductController::class, 'list']);
+    Route::get('/{id}', [ProductController::class, 'detail']);
 });
+Route::prefix('category')->group(function(){
+    Route::get('/list', [CategoryController::class, 'list']);
+    Route::get('/list-for-manager', [CategoryController::class, 'list']);
+    Route::get('/{id}', [CategoryController::class, 'detail']);
+});
+Route::prefix('customer')->group(function(){
+    Route::get('/list', [CategoryController::class, 'list']);
+});
+
+Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+    Route::post('calculate', [OrderController::class, 'calculateOrder']);
+    Route::post('checkout', [OrderController::class, 'checkout']);
+    Route::get('list', [OrderController::class, 'list']);
+    Route::post('change_status', [OrderController::class, 'changeMultipleStatus']);
+    Route::get('{id}', [OrderController::class, 'detail']);
+    Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
+    Route::post('{id}/edit', [OrderController::class, 'edit']);
+});
+//Common
 Route::prefix('common')->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
     Route::get('product-list', [ProductManagementController::class, 'list']);
@@ -117,18 +152,4 @@ Route::prefix('common')->group(function(){
         Route::get('employee', [AccountController::class, 'listAllEmployee']);
         Route::get('promotion', [PromotionController::class, 'getUserPromotion']);
     });
-});
-Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
-    Route::post('calculate', [OrderController::class, 'calculateOrder']);
-    Route::post('checkout', [OrderController::class, 'checkout']);
-    Route::get('list', [OrderController::class, 'list']);
-    Route::post('change_status', [OrderController::class, 'changeMultipleStatus']);
-    Route::get('{id}', [OrderController::class, 'detail']);
-    Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
-    Route::post('{id}/edit', [OrderController::class, 'edit']);
-});
-Route::prefix('auth')->group(function () {
-    Route::post('login', [AuthController::class, 'login']);
-    Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::post('signup', [AuthController::class, 'signup']);
 });
