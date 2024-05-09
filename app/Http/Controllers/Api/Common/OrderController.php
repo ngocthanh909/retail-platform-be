@@ -47,7 +47,7 @@ class OrderController extends Controller
     {
         try {
             $data = $request->all();
-            $user = $request->user();
+            $user = auth('sanctum')->user();
             $responseData = $this->calculate($data, $user);
             return $this->success($responseData);
         } catch (\Throwable $e) {
@@ -61,7 +61,7 @@ class OrderController extends Controller
         DB::beginTransaction();
         try {
             $data = $request->validated();
-            $user = $request->user();
+            $user = auth('sanctum')->user();
 
             $customer = Customer::find($request->customer_id);
             $responseData = $this->calculate($data, $user);
@@ -299,7 +299,7 @@ class OrderController extends Controller
     {
         $data = $request->all();
         $query = new Order();
-        $user = $request->user();
+        $user = auth('sanctum')->user();
         if ($user->tokenCan('customer')) {
             $query = $query->where('customer_id', $user->id);
         } else {

@@ -131,14 +131,15 @@ Route::prefix('customer')->group(function(){
 });
 
 Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
-    Route::post('calculate', [OrderController::class, 'calculateOrder']);
-    Route::post('checkout', [OrderController::class, 'checkout']);
     Route::get('list', [OrderController::class, 'list']);
     Route::post('change_status', [OrderController::class, 'changeMultipleStatus']);
-    Route::get('{id}', [OrderController::class, 'detail']);
     Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
     Route::post('{id}/edit', [OrderController::class, 'edit']);
 });
+Route::prefix('order')->group(function(){
+    Route::get('{id}', [OrderController::class, 'detail']);
+    Route::post('calculate', [OrderController::class, 'calculateOrder']);
+    Route::post('checkout', [OrderController::class, 'checkout']);
 //Common
 Route::prefix('common')->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
