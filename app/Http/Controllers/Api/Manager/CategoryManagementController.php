@@ -28,7 +28,7 @@ class CategoryManagementController extends Controller
     }
 
     public function listAllWithProduct(Request $request){
-        $categories = Category::with('product')->get();
+        $categories = Category::with('product')->paginate(config('paginate.category_product'));
         return $this->success($categories, 'Lấy danh sách thành công');
     }
 
