@@ -1,13 +1,13 @@
 <?php
 
-use Laravel\Sanctum\Sanctum;
+$pageSize = $_GET['page_size'] ?? 25;
 
 return [
-    'store_list' => request()->page_size ?? 25,
-    'category' => request()->page_size ?? 25,
-    'product' => request()->page_size ?? 25,
-    'order' => request()->page_size ?? 25,
-    'notification' => request()->page_size ?? 25,
-    'paginate' => request()->page_size ?? 25,
-    'category_product' => request()->page_size ?? 25
+    'store_list' => $pageSize ?? 25,
+    'category' => $pageSize ?? 25,
+    'product' => $pageSize ?? 25,
+    'order' => $pageSize ?? 25,
+    'notification' => $pageSize ?? 25,
+    'paginate' => $pageSize ?? 25,
+    'category_product' => $pageSize ?? 25
 ];
