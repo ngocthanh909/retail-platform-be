@@ -3,11 +3,11 @@
 use Laravel\Sanctum\Sanctum;
 
 return [
-    'store_list' => 20,
-    'category' => 50,
-    'product' => 50,
-    'order' => 20,
-    'notification' => 10,
-    'paginate' => 10,
-    'category_product' => 20
+    'store_list' => request()->page_size ?? 25,
+    'category' => request()->page_size ?? 25,
+    'product' => request()->page_size ?? 25,
+    'order' => request()->page_size ?? 25,
+    'notification' => request()->page_size ?? 25,
+    'paginate' => request()->page_size ?? 25,
+    'category_product' => request()->page_size ?? 25
 ];

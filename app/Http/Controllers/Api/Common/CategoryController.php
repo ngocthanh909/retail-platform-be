@@ -13,12 +13,12 @@ class CategoryController extends Controller
 {
     use ApiResponseTrait;
     public function list(Request $request){
-        $categories = Category::where('status', 1)->get();
+        $categories = Category::where('status', 1)->paginate(config('paginate.category'));
         return $this->success($categories, 'Lấy danh sách thành công');
     }
 
     public function listForManager(Request $request){
-        $categories = Category::get();
+        $categories = Category::paginte(config('paginate.category'));
         return $this->success($categories, 'Lấy danh sách thành công');
     }
 
