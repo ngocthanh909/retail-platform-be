@@ -106,6 +106,18 @@ class AuthController extends Controller
         }
     }
 
+    function deleteAccount(Request $request){
+        try {
+            $user = $request->user();
+            if($user->delete()){
+                throw new \Exception('Lỗi khi xóa tài khoản');
+            }
+            return $this->success();
+        } catch(\Throwable $e){
+            return $this->failure("Lỗi khi xóa tài khoản", $e->getMessage());
+        }
+    }
+
     function info(Request $request){
         return $this->success($request->user());
     }

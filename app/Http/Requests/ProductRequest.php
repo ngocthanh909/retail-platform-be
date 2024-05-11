@@ -30,14 +30,13 @@ class ProductRequest extends FormRequest
         }
         return [
             'product_name' => 'required|string|max:255',
-            'images' => 'nullable|array',
-            'images.*' => 'image|max:2048',
+            'images.*' => ['required', 'image' => 'max:2048', 'string' => 'max:300'],
             'sku' => "required|string|max:100|unique:$requiredString",
             'category_id' => 'required|numeric',
             'price' => 'required|numeric|min:0',
             'status' => 'nullable',
             'description' => 'nullable|string|max:1000',
-            'old_images' => 'nullable|string'
+            'product_image' => request()->id ? ['required', 'image' => 'max:2048', 'string' => 'max:300'] : 'image|max:2048'
         ];
     }
 }

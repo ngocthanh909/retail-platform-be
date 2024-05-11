@@ -12,6 +12,7 @@ class Category extends Model
     use HasFactory;
     protected $table = 'categories';
     protected $fillable = ['category_name', 'category_code', 'category_image'];
+    protected $appends = ['category_image_storage_path'];
 
     protected function categoryImage(): Attribute
     {
@@ -24,5 +25,8 @@ class Category extends Model
     }
     public function product(){
         return $this->hasMany(Product::class, 'category_id', 'id');
+    }
+    public function getCategoryImageStoragePathAttribute() {
+        return $this->getRawOriginal('category_image');
     }
 }

@@ -56,11 +56,23 @@ class ProductManagementController extends Controller
                 'sku' => $data['sku'] ?? '',
                 'price' => $data['price'] ?? 0,
                 'description' => $data['description'] ?? '',
-                'product_image' => '',
                 'category_id' => $data['category_id'] ?? 0,
                 'status' => $data['status'] ?? 1,
             ]);
+
+            if(is_object($request->product_image)){
+                $product_image = $request->hasFile('product_image') ? $request->file('product_image') : null;
+                $extension = $product_image->extension();
+                $fileName = $product_image->storePubliclyAs(
+                    'images/products',
+                    Str::slug($data['product_name']) . '_' . str_pad(rand(0, 999), 3, STR_PAD_LEFT) . '.' . $extension,
+                    'public'
+                );
+                $product->product_image = $fileName;
+            }
+
             $files = $request->hasFile('images') ? $request->file('images') : null;
+
             $fileNames = [];
             $fileNameRaw = [];
             if ($files && (count($files) > 0)) {
@@ -71,15 +83,11 @@ class ProductManagementController extends Controller
                         Str::slug($data['product_name']) . '_' . str_pad(rand(0, 999), 3, STR_PAD_LEFT) . '.' . $extension,
                         'public'
                     );
-                    if ($key == 0 && $fileName) {
-                        $product->product_image = $fileName;
-                    } else {
-                        if ($fileName) {
-                            $fileNames[] = [
-                                'product_id' => '',
-                                'product_image' => $fileName
-                            ];
-                        }
+                    if ($fileName) {
+                        $fileNames[] = [
+                            'product_id' => '',
+                            'product_image' => $fileName
+                        ];
                     }
                     $fileNameRaw[] = $fileName;
                 }
@@ -115,11 +123,11 @@ class ProductManagementController extends Controller
         DB::beginTransaction();
         $fileNames = [];
         $fileNameRaw = [];
-        $oldImages = [];
+        $shouldDeleteFile = [];
         try {
             $data = $request->validated();
             $product = Product::findOrFail($id);
-            $oldImagePathIds = explode(',', $data['old_images']);
+
             $product->fill([
                 'product_name' => $data['product_name'],
                 'sku' => $data['sku'],
@@ -128,7 +136,22 @@ class ProductManagementController extends Controller
                 'category_id' => $data['category_id'],
                 'status' => $data['status'] ?? 1,
             ]);
-            $oldImageInputs = ProductImage::whereIn('id', $oldImagePathIds)->get();
+            if(is_object($request->product_image)){
+                $shouldDeleteFile[] = $product->getRawOriginal('product_image');
+                $product_image = $request->hasFile('product_image') ? $request->file('product_image') : null;
+                $extension = $product_image->extension();
+                $fileName = $product_image->storePubliclyAs(
+                    'images/products',
+                    Str::slug($data['product_name']) . '_' . str_pad(rand(0, 999), 3, STR_PAD_LEFT) . '.' . $extension,
+                    'public'
+                );
+                $product->product_image = $fileName;
+            }
+            foreach($data['images'] as $image){
+                dump($image);
+            }
+            dd(1);
+            // $oldImageInputs = ProductImage::whereIn('id', $oldImagePathIds)->get();
             $deleteImagesList = ProductImage::where('product_id', $id)->whereNotIn('id', $oldImagePathIds)->get();
             ProductImage::where('product_id', $id)->delete();
             $files = $request->hasFile('images') ? $request->file('images') : null;

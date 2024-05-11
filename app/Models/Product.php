@@ -56,4 +56,6 @@ class Product extends Model
         }
         return $query->paginate(config('paginate.product'));
     }
+
+
 }
