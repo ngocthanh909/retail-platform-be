@@ -111,12 +111,10 @@ class PromotionManagementController extends Controller
             if(!$promotionSaved){
                 throw new \Exception('Không thể lưu chương trình khuyến mãi');
             }
-            // dd($promotionSaved);
             DB::commit();
             return $this->success($promotion->load(['applyCustomer', 'applyProduct']), 'Lưu CTKM thành công');
         } catch (\Throwable $e) {
             DB::rollBack();
-            // dd($e);
             Log::error($e);
             return $this->failure('Tạo chương trình KM thất bại', $e->getMessage());
         }
@@ -191,7 +189,6 @@ class PromotionManagementController extends Controller
             if(!$promotionSaved){
                 throw new \Exception('Không thể sửa chương trình khuyến mãi');
             }
-            // dd($promotionSaved);
             DB::commit();
             return $this->success($promotion->load(['applyCustomer', 'applyProduct']), 'Sửa CTKM thành công');
         } catch (\Throwable $e) {

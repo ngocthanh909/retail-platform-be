@@ -60,7 +60,7 @@ class ProductManagementController extends Controller
                 'status' => $data['status'] ?? 1,
             ]);
 
-            if(is_object($request->product_image)){
+            if (is_object($request->product_image)) {
                 $product_image = $request->hasFile('product_image') ? $request->file('product_image') : null;
                 $extension = $product_image->extension();
                 $fileName = $product_image->storePubliclyAs(
@@ -136,7 +136,7 @@ class ProductManagementController extends Controller
                 'category_id' => $data['category_id'],
                 'status' => $data['status'] ?? 1,
             ]);
-            if(is_object($request->product_image)){
+            if (is_object($request->product_image)) {
                 $shouldDeleteFile[] = $product->getRawOriginal('product_image');
                 $product_image = $request->hasFile('product_image') ? $request->file('product_image') : null;
                 $extension = $product_image->extension();
@@ -147,50 +147,41 @@ class ProductManagementController extends Controller
                 );
                 $product->product_image = $fileName;
             }
-            foreach($data['images'] as $image){
-                dump($image);
-            }
-            dd(1);
-            // $oldImageInputs = ProductImage::whereIn('id', $oldImagePathIds)->get();
-            $deleteImagesList = ProductImage::where('product_id', $id)->whereNotIn('id', $oldImagePathIds)->get();
-            ProductImage::where('product_id', $id)->delete();
-            $files = $request->hasFile('images') ? $request->file('images') : null;
-            if ($files && (count($files) > 0)) {
-                foreach ($files as $key => $file) {
-                    $extension = $file->extension();
-                    $fileName = $file->storePubliclyAs(
+
+            foreach ($data['images'] as $image) {
+                if (is_string($image)) {
+                    $fileNameRaw[] = $image;
+                } elseif (is_object($image)) {
+                    $product_image = $image;
+                    $extension = $product_image->extension();
+                    $fileName = $product_image->storePubliclyAs(
                         'images/products',
                         Str::slug($data['product_name']) . '_' . str_pad(rand(0, 999), 3, STR_PAD_LEFT) . '.' . $extension,
                         'public'
                     );
-
-                    if ($fileName) {
-                        $fileNames[] = [
-                            'product_id' => $id,
-                            'product_image' => $fileName
-                        ];
-                    };
                     $fileNameRaw[] = $fileName;
                 }
             }
 
+            $shouldDeleteQueryRs = ProductImage::where('product_id', $id)->whereNotIn('product_image', $fileNameRaw)->get();
+            foreach($shouldDeleteQueryRs as $possibleDeleteFile){
+                $shouldDeleteFile[] = $possibleDeleteFile->product_image_storage_path;
+            }
+            $deleteOldProductRecord = ProductImage::where('product_id', $id)->delete();
 
             $fileNames = array_map(function ($item) use ($id) {
-                $item['product_id'] = $id;
-                return $item;
-            }, $fileNames);
-            $product->product_image = count($oldImageInputs) > 0 ? $oldImageInputs[0]->getRawOriginal('product_image') : (count($fileNames) > 0 ? ($fileName['product_image'] ?? '') : '');
+                return ['product_id' => $id, 'product_image' => $item];
+            }, $fileNameRaw);
             ProductImage::insert($fileNames);
             if (!$product->save()) {
                 throw new \Exception('Lỗi khi tạo sản phẩm mới');
             };
+            DB::commit();
             //Delete old
-            foreach($deleteImagesList as $imageToDelete){
-                $pathToDelete = $imageToDelete->getRawOriginal('product_image');
+            foreach ($shouldDeleteFile as $imageToDelete) {
+                $pathToDelete = $imageToDelete;
                 Storage::exists($pathToDelete) && Storage::delete($pathToDelete);
             }
-            DB::commit();
-
             return $this->success(Product::getOne($id), 'Sửa sản phẩm thành công');
         } catch (\Throwable $e) {
             Log::error($e);
@@ -217,8 +208,8 @@ class ProductManagementController extends Controller
             if (!empty($oldFile) && Storage::exists($oldFile)) {
                 Storage::delete($oldFile);
             }
-            if(count($productImages) > 0){
-                foreach($productImages as $oldImage){
+            if (count($productImages) > 0) {
+                foreach ($productImages as $oldImage) {
                     Storage::delete($oldImage->getRawOriginal('product_image'));
                 }
             }
@@ -238,7 +229,7 @@ class ProductManagementController extends Controller
     {
         try {
             $product = Product::findOrFail($id);
-            if($product->status == 1){
+            if ($product->status == 1) {
                 $product->status = 0;
                 $product->save();
                 return $this->success([], 'Ngừng kinh doanh sản phẩm thành công');

@@ -13,7 +13,7 @@ class Product extends Model
     use HasFactory;
     protected $table = 'products';
     protected $fillable = ['product_name', 'product_image', 'description', 'sku', 'category_id', 'price', 'status'];
-    protected $appends = [];
+    protected $appends = ['product_image_storage_path'];
 
     protected function productImage(): Attribute
     {
@@ -57,5 +57,7 @@ class Product extends Model
         return $query->paginate(config('paginate.product'));
     }
 
-
+    public function getProductImageStoragePathAttribute() {
+        return $this->getRawOriginal('product_image');
+    }
 }

@@ -40,7 +40,7 @@ Route::prefix('auth')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
     Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::post('signup', [AuthController::class, 'signup']);
-    Route::post('delete-user', [AuthController::class, 'deleteAccount'])->middleware(['auth:sanctum', 'abilitiy:customer']);
+    Route::post('delete-user', [AuthController::class, 'deleteAccount'])->middleware(['auth:sanctum', 'ability:customer']);
 });
 
 Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(function () {
