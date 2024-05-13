@@ -41,7 +41,22 @@ class ReportManagementController extends Controller
                         $start = now()->subMonth()->startOfMonth()->format('Y-m-d');
                         $end = now()->subMonth()->endOfMonth()->format('Y-m-d');
                         break;
+                    case 'this_year':
+                        $start = now()->startOfYear()->format('Y-m-d');
+                        $end = now()->endOfYear()->format('Y-m-d');
+                        break;
+                    case 'last_year':
+                        $start = now()->subYear()->startOfYear()->format('Y-m-d');
+                        $end = now()->subYear()->endOfYear()->format('Y-m-d');
+                        break;
                     default:
+                        $dateRangeDt = explode(',', $dateRange);
+                        if(isset($dateRangeDt[0])){
+                            $start = Carbon::make($dateRangeDt[0])->format('Y-m-d');
+                        }
+                        if(isset($dateRangeDt[1])){
+                            $end = Carbon::make($dateRangeDt[1])->format('Y-m-d');
+                        }
                         break;
                 }
             }
@@ -49,6 +64,7 @@ class ReportManagementController extends Controller
 
 
             $condition = "";
+
 
             if ($start && !$end) {
                 $condition = "where DATE(o.created_at) = DATE('$start')";
@@ -58,6 +74,7 @@ class ReportManagementController extends Controller
             if (!empty($store)) {
                 $condition .= empty($condition) ? "where customer_id = $store" : "and customer_id = $store";
             }
+
 
             $employeeCondition = $condition;
             $employee = $request->employee ?? 0;

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\Manager;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\UserRequest;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\User;
 use Exception;
@@ -49,11 +50,11 @@ class AccountController extends Controller
         }
     }
 
-    function create(Request $request)
+    function create(UserRequest $request)
     {
         $fileName = '';
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $user = new User([
                 "name" => $request->name,
                 "phone" => $request->phone,
@@ -86,10 +87,10 @@ class AccountController extends Controller
         }
     }
 
-    function edit(Request $request, $id)
+    function edit(UserRequest $request, $id)
     {
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $user = User::findOrFail($id);
             $user->fill([
                 "name" => $request->name,
