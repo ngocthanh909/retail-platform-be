@@ -50,4 +50,20 @@ class BannerController extends Controller
             return $this->failure('Xóa banner thất bại', $e->getMessage());
         }
     }
+
+    public function reorder(Request $request){
+        try {
+            $new_order = $request->new_order;
+            if(!is_array($new_order)){
+                throw new \Exception('Thứ tự phải là array');
+            }
+            $deleteOldBanner = Banner::truncate();
+            foreach($new_order as $rawPathBanner){
+                Banner::insert(['image' => $rawPathBanner]);
+            }
+            return $this->success(Banner::get());
+        } catch (\Throwable $e) {
+            return $this->failure('Sắp xếp banner thất bại', $e->getMessage());
+        }
+    }
 }

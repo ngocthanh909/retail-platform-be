@@ -13,6 +13,7 @@ class Banner extends Model
     use HasFactory;
     protected $table = 'banners';
     protected $fillable = ['image', 'title', 'description'];
+    protected $appends = ['storage_path_image'];
 
     protected function image(): Attribute
     {
@@ -23,5 +24,9 @@ class Banner extends Model
         }
         return Attribute::make(get: fn () => '');
 
+    }
+    public function getStoragePathImageAttribute()
+    {
+        return $this->getRawOriginal('image');
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Common;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\Helpers\ApiResponseTrait;
+use App\Models\Config;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
@@ -12,6 +13,10 @@ use Illuminate\Support\Facades\Log;
 
 class ProductController extends Controller
 {
+    function __construct()
+    {
+        config(['app.discount_rate' => Config::getConfig('discount')]);
+    }
     use ApiResponseTrait;
     public function list(Request $request)
     {

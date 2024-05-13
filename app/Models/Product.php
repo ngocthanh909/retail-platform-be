@@ -7,23 +7,23 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 use DB;
+use Illuminate\Support\Facades\Log;
 
 class Product extends Model
 {
     use HasFactory;
     protected $table = 'products';
     protected $fillable = ['product_name', 'product_image', 'description', 'sku', 'category_id', 'price', 'status'];
-    protected $appends = ['product_image_storage_path'];
+    protected $appends = ['product_image_storage_path', 'display_price'];
 
     protected function productImage(): Attribute
     {
-        if($this->getRawOriginal('product_image')){
+        if ($this->getRawOriginal('product_image')) {
             return Attribute::make(
                 get: fn (string $value) => asset(Storage::url($value))
             );
         }
         return Attribute::make(get: fn () => '');
-
     }
 
     public function category()
@@ -57,7 +57,32 @@ class Product extends Model
         return $query->paginate(config('paginate.product'));
     }
 
-    public function getProductImageStoragePathAttribute() {
+    public function getProductImageStoragePathAttribute()
+    {
         return $this->getRawOriginal('product_image');
+    }
+
+    public function getDisplayPriceAttribute()
+    {
+        try {
+            $rate = config('app.discount_rate');
+            $user = auth('sanctum')->user();
+            $priceForGuest = $this->price + ($this->price * $rate / 100);
+
+            if ($user && $user->tokenCan('customer')) {
+                if ($user->responsible_staff) return $this->price;
+                return $priceForGuest;
+            } elseif ($user && ($user->tokenCan('admin') || $user->tokenCan('employee'))) {
+                if (request()->header('Destination_customer')) {
+                    $user = Customer::find(request()->header('Destination_customer'));
+                    if ($user && $user->responsible_staff) return $this->price;
+                    return $priceForGuest;
+                }
+            }
+            return $priceForGuest;
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return $this->price;
+        }
     }
 }

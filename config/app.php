@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Config;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
@@ -185,4 +186,5 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    'discount_rate' => env('GUEST_PRICE_CHANGE_RATE', 0)
 ];

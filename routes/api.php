@@ -57,6 +57,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::get('{id}', [CustomerManagementController::class, 'detail']);
         Route::post('/{id}/edit', [CustomerManagementController::class, 'update']);
         Route::post('/{id}/delete', [CustomerManagementController::class, 'delete']);
+        Route::post('change-discount-rate', [CustomerManagementController::class, 'editDiscountRate']);
     });
     Route::prefix('category')->group(function(){
         Route::get('list', [CategoryManagementController::class, 'list']);
@@ -77,6 +78,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     Route::prefix('banner')->group(function(){
         Route::get('list', [BannerController::class, 'list']);
         Route::post('create', [BannerController::class, 'create']);
+        Route::post('reorder', [BannerController::class, 'reorder']);
         Route::post('/{id}/delete', [BannerController::class, 'delete']);
     });
     Route::prefix('promotion')->group(function(){
@@ -119,7 +121,7 @@ Route::prefix('customer')->middleware(['auth:sanctum', 'ability:customer'])->gro
 //Group common
 Route::prefix('product')->group(function(){
     Route::get('/list', [ProductController::class, 'list']);
-    Route::get('/list-for-manager', [ProductController::class, 'list']);
+    Route::get('/list-for-manager', [ProductController::class, 'listForManager']);
     Route::get('/{id}', [ProductController::class, 'detail']);
 });
 Route::prefix('category')->group(function(){
@@ -148,8 +150,8 @@ Route::prefix('common')->group(function(){
     Route::get('customer', [CustomerManagementController::class, 'listAll']);
     Route::get('banners', [BannerController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
-    Route::get('user-info', [AuthController::class, 'info']);
     Route::middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+        Route::get('user-info', [AuthController::class, 'info']);
         Route::get('employee', [AccountController::class, 'listAllEmployee']);
         Route::get('promotion', [PromotionController::class, 'getUserPromotion']);
     });

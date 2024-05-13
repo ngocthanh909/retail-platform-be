@@ -263,7 +263,7 @@ class OrderController extends Controller
                     if (!$product) {
                         throw new Exception("Không tìm thấy sản phẩm trong danh sách");
                     }
-                    $tempPrice = $product->price + ($isGuest ? ($product->price * ((int)(Config::getConfig('discount_rate') ?? 0)) / 100) : 0);
+                    $tempPrice = $product->price + ($isGuest ? ($product->price * ((int)(Config::getConfig('discount') ?? 0)) / 100) : 0);
                     $tempTotal = $tempPrice * $rawProduct['qty'];
                     $products[] = [
                         'id' => $product->id,
