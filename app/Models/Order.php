@@ -57,6 +57,6 @@ class Order extends Authenticatable
         return $this->belongsTo(User::class, 'responsible_staff', 'id');
     }
     public function creator(){
-        return $this->belongsTo(User::class, 'creator', 'id');
+        return $this->belongsTo(User::class, 'creator_id', 'id');
     }
 }
