@@ -336,7 +336,7 @@ class OrderController extends Controller
             $query = $query->where('status', $request->status);
         }
 
-        $orders = $query->with(['staff', 'creator'])->paginate(config('paginate.order'));
+        $orders = $query->with(['staff', 'creator'])->orderBy('updated_at', 'DESC')->orderBy('created_at')->paginate(config('paginate.order'));
         return $this->success($orders);
     }
 }

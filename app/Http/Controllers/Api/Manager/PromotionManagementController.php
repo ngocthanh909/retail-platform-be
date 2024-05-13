@@ -37,7 +37,7 @@ class PromotionManagementController extends Controller
         if($promote_type){
             $promotions = $promotions->where('promote_type', $promote_type);
         }
-        $promotions = $promotions->orderBy('start_date', 'DESC')->paginate(config('paginate.promotion'));
+        $promotions = $promotions->orderBy('created_at', 'DESC')->paginate(config('paginate.promotion'));
         //with(['applyProduct', 'applyCustomer'])->
         return $this->success($promotions);
     }

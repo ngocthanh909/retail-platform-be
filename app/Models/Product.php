@@ -73,8 +73,8 @@ class Product extends Model
                 if ($user->responsible_staff) return $this->price;
                 return $priceForGuest;
             } elseif ($user && ($user->tokenCan('admin') || $user->tokenCan('employee'))) {
-                if (request()->header('Destination_customer')) {
-                    $user = Customer::find(request()->header('Destination_customer'));
+                if (request()->destination_customer) {
+                    $user = Customer::find(request()->destination_customer);
                     if ($user && $user->responsible_staff) return $this->price;
                     return $priceForGuest;
                 }
