@@ -22,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropColumns($this->tableName, ['dob', 'gender', 'avatar']);
+        Schema::table($this->tableName, function (Blueprint $table) {
+            $table->renameColumn('creator_id', 'creator');
+        });
     }
 };
