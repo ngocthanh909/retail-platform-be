@@ -111,7 +111,14 @@ Route::prefix('employee')->middleware(['auth:sanctum', 'ability:employee'])->gro
         Route::post("edit", [EmployeeProfileController::class, 'edit']);
         Route::post("change-password", [EmployeeProfileController::class, 'changePassword']);
     });
-    Route::get('managed-customer', [CustomerController::class, 'listManagedByMe']);
+    Route::prefix('customer')->group(function(){
+        Route::get('list-managed', [CustomerController::class, 'listManagedByMe']);
+        Route::post('create', [CustomerController::class, 'create']);
+        Route::get('{id}', [CustomerController::class, 'detail']);
+        Route::post('{id}/edit', [CustomerController::class, 'edit']);
+        Route::post('{id}/delete', [CustomerController::class, 'delete']);
+    });
+
 });
 Route::prefix('customer')->middleware(['auth:sanctum', 'ability:customer'])->group(function () {
     Route::prefix('profile')->group(function(){

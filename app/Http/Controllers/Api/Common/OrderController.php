@@ -304,17 +304,21 @@ class OrderController extends Controller
                 $successCount++;
                 $messageUser = '';
                 $messageAdmin = '';
+                $title = '';
                 if($request->status == 2){
+                    $title = 'Xác nhận đơn hàng';
                     $messageUser = 'Đơn hàng ' . $order->displayId .  ' của bạn đã được xác nhận';
                     $messageAdmin = 'Đơn hàng ' . $order->displayId . ' đã được xác nhận bởi ' . $user->name;
                 }
                 if($request->status == 3){
+                    $title = 'Hoàn thành đơn hàng';
                     $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã hoàn thành';
-                    $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . $user->name;
+                    $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . ($user->name ?? $customer->customer_name);
                 }
                 if($request->status == 0){
+                    $title = 'Hủy đơn hàng';
                     $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên.';
-                    $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . $user->name;
+                    $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . ($user->name ?? $customer->customer_name);
                 }
 
                 $this->sendNotification(
@@ -322,7 +326,7 @@ class OrderController extends Controller
                     1,
                     null,
                     false,
-                    '',
+                    $title,
                     $messageUser,
                     ''
                 );
@@ -334,7 +338,7 @@ class OrderController extends Controller
                     0,
                     null,
                     false,
-                    '',
+                    $title,
                     $messageAdmin,
                     ''
                 );
