@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Http\Traits\Helpers\NotificationTrait;
 use App\Models\Notification;
+use App\Models\NotificationTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -19,7 +20,7 @@ class NotificationManagerController extends Controller
                 is_array($request->ids) ? $request->ids : 0,
                 1,
                 $request->delivery_time,
-                false,
+                true,
                 $request->title ?? '',
                 $request->content ?? '',
                 ''
@@ -28,6 +29,16 @@ class NotificationManagerController extends Controller
                 return $this->failure('Gửi thông báo thành không thành công!');
             }
             return $this->success([], 'Gửi thông báo thành công!');
+        } catch(\Throwable $e){
+            Log::error($e);
+            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+        }
+    }
+
+    function list(Request $request){
+        try {
+            $notifications = NotificationTemplate::where('is_manual', 1)->paginate(config('store_list'));
+            return $this->success($notifications, 'Gửi thông báo thành công!');
         } catch(\Throwable $e){
             Log::error($e);
             return $this->failure('Gửi thông báo thất bại', $e->getMessage());

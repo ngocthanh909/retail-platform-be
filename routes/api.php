@@ -89,6 +89,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
         Route::post('/{id}/edit', [PromotionManagementController::class, 'edit']);
     });
     Route::prefix('notification')->group(function(){
+        Route::get('list', [NotificationManagerController::class, 'list']);
         Route::post('create', [NotificationManagerController::class, 'create']);
         Route::post('/{id}/delete', [NotificationManagerController::class, 'delete']);
     });
