@@ -34,11 +34,11 @@ class UserRequest extends FormRequest
         return [
             'phone' => "required|string|max:20|unique:$requiredString",
             'password' => request()->id ? "nullable" : "required|string|max:60",
-            'email' => 'nullable|email|max:50',
+            'email' => ['nullable', 'email' => 'max:50'],
             'name' => 'required|string|max:200',
-            'address' => 'nullable|string|max:100',
+            'address' => ['nullable', 'string' => 'max:100'],
             'avatar' => ['nullable', 'image' => 'max:2048'],
-            'dob' => 'nullable|date',
+            'dob' => ['nullable', 'date'],
             'gender' => 'string|numeric',
             'status' => 'nullable',
         ];
