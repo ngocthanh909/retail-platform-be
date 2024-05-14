@@ -148,7 +148,7 @@ class ProductManagementController extends Controller
                 $product->product_image = $fileName;
             }
 
-            foreach ($data['images'] as $image) {
+            foreach (($data['images'] ?? []) as $image) {
                 if (is_string($image)) {
                     $fileNameRaw[] = $image;
                 } elseif (is_object($image)) {

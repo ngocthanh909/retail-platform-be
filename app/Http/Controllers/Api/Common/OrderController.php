@@ -106,7 +106,29 @@ class OrderController extends Controller
             };
             DB::commit();
             $order = $order->load('details');
-            $this->sendCustomerNotification($order->customer_id, 'Đặt hàng thành công', 'Đơn hàng của bạn đã được tạo thành công. Mã đơn hàng của bạn là '. $order->displayId);
+            $this->sendNotification(
+                $user->id,
+                1,
+                null,
+                false,
+                'Tạo đơn hàng thành công',
+                'Bạn đã tạo đơn hàng thành công. Mã đơn hàng của bạn là ' . $order->displayId,
+                ''
+            );
+            $adminReceiver = [1];
+
+            if($customer->responsible_staff){
+                $adminReceiver[] = $customer->responsible_staff;
+            }
+            $this->sendNotification(
+                $adminReceiver,
+                0,
+                null,
+                false,
+                'Bạn có đơn hàng mới',
+                'Khách hàng ' . $user->customer_name . ' vừa đặt thành công đơn hàng ' . $order->displayId,
+                ''
+            );
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -167,7 +189,28 @@ class OrderController extends Controller
             };
             DB::commit();
             $order = $order->load('details');
-            $this->sendCustomerNotification($order->customer_id, 'Sửa đơn hàng thành công', 'Đơn hàng của bạn đã được chỉnh sửa');
+            $this->sendNotification(
+                $user->id,
+                1,
+                null,
+                false,
+                'Sửa đơn hàng thành công',
+                'Bạn đã sửa đơn hàng thành công',
+                ''
+            );
+            if($customer->responsible_staff){
+                $adminReceiver[] = $customer->responsible_staff;
+            }
+            $this->sendNotification(
+                $adminReceiver,
+                0,
+                null,
+                false,
+                'Sửa',
+                'Đơn của ' . $order->displayId . ' khách hàng ' . $user->customer_name . ' vừa được chỉnh sửa ',
+                ''
+            );
+
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -189,7 +232,7 @@ class OrderController extends Controller
             if (!is_numeric($orderUpdate)) {
                 return $this->failure('Lỗi cập nhật đơn hàng');
             }
-            $this->sendCustomerNotification(Order::find($id)?->customer_id, 'Đơn hàng của bạn ' . Order::ORDER_STATUS[$request->status], 'Đơn hàng của bạn đang trong trạng thái ' . Order::ORDER_STATUS[$request->status]);
+            $this->sendNotification(Order::find($id)?->customer_id, 'Đơn hàng của bạn ' . Order::ORDER_STATUS[$request->status], 'Đơn hàng của bạn đang trong trạng thái ' . Order::ORDER_STATUS[$request->status]);
 
             DB::commit();
             return $this->success([], 'Đơn hàng đã sửa trạng thái thành công');
@@ -207,6 +250,7 @@ class OrderController extends Controller
     {
         $ids = $request->ids ?? [];
         DB::beginTransaction();
+        $user = $request->user();
         try {
             $successCount = 0;
             foreach($ids as $id){
@@ -214,11 +258,48 @@ class OrderController extends Controller
                     return $this->failure('Trạng thái không hợp lệ');
                 }
                 $orderUpdate = Order::with('details')->where('id', $id)->update(['status' => $request['status']]);
+                $order = Order::find($id);
+                $customer = Customer::find($order->customer_id);
                 if (!is_numeric($orderUpdate)) {
                     return $this->failure('Lỗi cập nhật đơn hàng');
                 }
                 $successCount++;
-                $this->sendCustomerNotification(Order::find($id)?->customer_id, 'Đơn hàng của bạn ' . Order::ORDER_STATUS[$request->status], 'Đơn hàng của bạn đang trong trạng thái ' . Order::ORDER_STATUS[$request->status]);
+                $messageUser = '';
+                $messageAdmin = '';
+                if($request->status == 2){
+                    $messageUser = 'Đơn hàng ' . $order->displayId .  ' của bạn đã được xác nhận';
+                    $messageAdmin = 'Đơn hàng ' . $order->displayId . ' đã được xác nhận bởi ' . $user->name;
+                }
+                if($request->status == 3){
+                    $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã hoàn thành';
+                    $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . $user->name;
+                }
+                if($request->status == 0){
+                    $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên.';
+                    $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . $user->name;
+                }
+
+                $this->sendNotification(
+                    $user->id,
+                    1,
+                    null,
+                    false,
+                    '',
+                    $messageUser,
+                    ''
+                );
+                if($customer->responsible_staff){
+                    $adminReceiver[] = $customer->responsible_staff;
+                }
+                $this->sendNotification(
+                    $adminReceiver,
+                    0,
+                    null,
+                    false,
+                    '',
+                    $messageAdmin,
+                    ''
+                );
             }
             DB::commit();
             return $this->success([], $successCount .' đơn hàng đã sửa trạng thái thành công');

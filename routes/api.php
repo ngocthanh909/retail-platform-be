@@ -90,6 +90,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     });
     Route::prefix('notification')->group(function(){
         Route::post('create', [NotificationManagerController::class, 'create']);
+        Route::post('/{id}/delete', [NotificationManagerController::class, 'delete']);
     });
     Route::prefix('report')->group(function(){
         Route::get('/', [ReportManagementController::class, 'report']);

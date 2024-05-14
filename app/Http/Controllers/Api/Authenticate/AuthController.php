@@ -36,6 +36,8 @@ class AuthController extends Controller
             $abilities = [];
             if ($checkUser && $this->guardManager()->attempt($credentials)) {
                 $user = $this->guardManager()->user();
+                $user->device_token = $request->device_token;
+                $user->save();
                 $abilities[] = 'employee';
                 $role = 'employee';
                 if($user->is_admin){
@@ -51,6 +53,8 @@ class AuthController extends Controller
 
             if($user){
                 $tokenResult = $user->createToken("$role:".$user->id .';'.now(), $abilities, now()->addYear());
+                $user->device_token = $request->device_token;
+                $user->save();
                 $token = $tokenResult->plainTextToken;
                 DB::commit();
                 $responseData = [

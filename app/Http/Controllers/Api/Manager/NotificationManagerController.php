@@ -14,7 +14,15 @@ class NotificationManagerController extends Controller
     use ApiResponseTrait, NotificationTrait;
     function create(Request $request){
         try {
-            $sendNotifi = $this->sendCustomerNotification($request->receiver_id, $request->title, $request->content);
+            $sendNotifi = $this->sendNotification(
+                $request->ids,
+                1,
+                $request->delivery_time,
+                false,
+                $request->title ?? '',
+                $request->content ?? '',
+                ''
+            );
             if(!$sendNotifi){
                 return $this->failure('Gửi thông báo thành không thành công!');
             }
@@ -39,7 +47,7 @@ class NotificationManagerController extends Controller
 
     function delete(Request $request){
         try {
-            $deleteNotifi = $this->delete($request->id);
+            $deleteNotifi = $this->deleteNotificationStrategy($request->id);
             if(!$deleteNotifi){
                 return $this->failure('Xóa thông báo không thành công!');
             }

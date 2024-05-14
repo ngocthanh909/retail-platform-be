@@ -10,19 +10,74 @@
 namespace App\Http\Traits\Helpers;
 
 use App\Models\Notification;
+use App\Models\NotificationTemplate;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
+
 trait NotificationTrait
 {
-    function sendCustomerNotification(string $id, string $title = '', string $content = ''){
-        $notification = new Notification(['receiver' => $id, 'receiver_type' => 1, 'title' => $title, 'content' => $content, 'seen' => 0]);
+    function sendNotification(mixed $id, $userType = 0, $sendTime = null, $isManual = false, string $title = '', string $content = '', $image = ''){
+        $templateId = $this->generateTemplate($title, $content, $image, $isManual);
+        if(is_array($id)){
+            foreach($id as $receiverId){
+                $notification = new Notification([
+                    'template_id' => $templateId,
+                    'receiver_id' => $receiverId ?? 0,
+                    'delivery_time' => $sendTime,
+                    'user_type' => $userType,
+                    'seen' => 0
+                ]);
+                $notification->save();
+            }
+        } else {
+            $notification = new Notification([
+                'template_id' => $templateId,
+                'receiver_id' => $id,
+                'delivery_time' => $sendTime,
+                'user_type' => $userType,
+                'seen' => 0
+            ]);
+            $notification->save();
+        }
+
         return $notification->save();
     }
     function seenNotification($id){
         $seen = Notification::where('id', $id)->update(['seen' => 1]);
         return $seen;
     }
+
     function deleteNotification($id){
-        $delete = Notification::where('id', $id)->delete();
-        return $delete;
+        $notification = Notification::where('id', $id)->where('receiver_id', request()->user()?->id)->delete();
+        return $notification;
+    }
+    function deleteNotificationStrategy($id){
+        $notification = NotificationTemplate::find($id);
+        if(!$notification){
+            return false;
+        }
+        DB::beginTransaction();
+        if(Notification::where('template_id', $id)->delete() &&  $notification->delete()){
+            DB::commit();
+            return true;
+        }
+        DB::rollback();
+        return false;
+    }
+    function generateTemplate($title = '', $content = '', $image = '', $isManual){
+        if(!empty($content)){
+            $notification = new NotificationTemplate([
+                'is_manual' => $isManual,
+                'title' => $title,
+                'content' => $content,
+                'image' => ''
+            ]);
+            $notification->save();
+            return $notification->id;
+        }
+        return false;
+    }
+    function sendFirebaseNotification(){
+
     }
 }
