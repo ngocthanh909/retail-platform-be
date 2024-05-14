@@ -136,7 +136,6 @@ class CustomerManagementController extends Controller
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi sửa cửa hàng");
             }
-            dd($customer);
             return $this->success($customer, 'Sửa cửa hàng thành công');
         } catch (\Throwable $e) {
             $message = 'Lỗi khi cập nhật thông tin cửa hàng';
