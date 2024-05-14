@@ -119,7 +119,7 @@ class AccountController extends Controller
                 $user->avatar = $fileName;
             };
             if ($user->save()) {
-                return $this->success("Sửa tài khoản thành công!");
+                return $this->success($user, "Sửa tài khoản thành công!");
             };
             return $this->failure("Sửa tài khoản thất bại");
         } catch(\Throwable $e){

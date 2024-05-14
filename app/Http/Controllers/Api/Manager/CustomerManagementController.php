@@ -12,6 +12,7 @@ use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CustomerManagementController extends Controller
 {
@@ -75,6 +76,17 @@ class CustomerManagementController extends Controller
                 'status' => $data['status'] ?? true
             ];
             $customer = new Customer($customerData);
+            $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
+            $fileName = '';
+            $customer = new Customer($customerData);
+            if ($file) {
+                $fileName = $file->storePubliclyAs(
+                    'images/users',
+                    Str::slug($customer->phone) . time() . '.' . $file->extension()
+                );
+                $customer->avatar = $fileName;
+            };
+
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi tạo mới khách hàng");
             }
@@ -99,18 +111,32 @@ class CustomerManagementController extends Controller
                 'province' => $data['province'] ?? '',
                 'responsible_staff' => $data['responsible_staff'] ?? 0,
                 'address' => $data['address'],
-                'status' => $data['status'] ?? true
+                'status' => $data['status'] ?? true,
+                'gender' => $data['gender'] ?? 1,
             ];
 
             if (!empty($data['password'])) {
                 $customerData['password'] = Hash::make($data["password"]);
             }
 
+            $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
+            $fileName = '';
+            $customer = new Customer($customerData);
+            if ($file) {
+                $fileName = $file->storePubliclyAs(
+                    'images/users',
+                    Str::slug($customer->phone) . time() . '.' . $file->extension()
+                );
+                $customer->avatar = $fileName;
+            };
+
+
             $customer->fill($customerData);
 
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi sửa cửa hàng");
             }
+            dd($customer);
             return $this->success($customer, 'Sửa cửa hàng thành công');
         } catch (\Throwable $e) {
             $message = 'Lỗi khi cập nhật thông tin cửa hàng';

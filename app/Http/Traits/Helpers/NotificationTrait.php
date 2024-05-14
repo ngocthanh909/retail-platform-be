@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 
 trait NotificationTrait
 {
-    function sendNotification(mixed $id, $userType = 0, $sendTime = null, $isManual = false, string $title = '', string $content = '', $image = ''){
+    function sendNotification(mixed $id, $userType = 0, $sendTime = null, $isManual = false, string $title = '', string $content = '', $image = '', $sendNow = true){
         $templateId = $this->generateTemplate($title, $content, $image, $isManual);
         if(is_array($id)){
             foreach($id as $receiverId){
@@ -25,7 +25,8 @@ trait NotificationTrait
                     'receiver_id' => $receiverId ?? 0,
                     'delivery_time' => $sendTime,
                     'user_type' => $userType,
-                    'seen' => 0
+                    'seen' => 0,
+                    'sent' => $sendNow
                 ]);
                 $notification->save();
             }
@@ -35,7 +36,8 @@ trait NotificationTrait
                 'receiver_id' => $id,
                 'delivery_time' => $sendTime,
                 'user_type' => $userType,
-                'seen' => 0
+                'seen' => 0,
+                'sent' => $sendNow
             ]);
             $notification->save();
         }

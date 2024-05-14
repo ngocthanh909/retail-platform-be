@@ -12,10 +12,11 @@ use Illuminate\Support\Facades\Log;
 class NotificationManagerController extends Controller
 {
     use ApiResponseTrait, NotificationTrait;
+
     function create(Request $request){
         try {
             $sendNotifi = $this->sendNotification(
-                $request->ids,
+                is_array($request->ids) ? $request->ids : 0,
                 1,
                 $request->delivery_time,
                 false,
@@ -32,6 +33,29 @@ class NotificationManagerController extends Controller
             return $this->failure('Gửi thông báo thất bại', $e->getMessage());
         }
     }
+
+    function edit(Request $request){
+        try {
+            $sendNotifi = $this->sendNotification(
+                $request->ids,
+                1,
+                $request->delivery_time,
+                false,
+                $request->title ?? '',
+                $request->content ?? '',
+                '',
+                false
+            );
+            if(!$sendNotifi){
+                return $this->failure('Gửi thông báo thành không thành công!');
+            }
+            return $this->success([], 'Gửi thông báo thành công!');
+        } catch(\Throwable $e){
+            Log::error($e);
+            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+        }
+    }
+
     function seen(Request $request){
         try {
             $seenNotifi = $this->seen($request->id);

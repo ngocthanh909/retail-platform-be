@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 class CustomerController extends Controller
 {
@@ -44,9 +45,21 @@ class CustomerController extends Controller
                 'responsible_staff' => $request->user()->id ?? '',
                 'password' => Hash::make($data["password"] ?? "12345678"),
                 'address' => $data['address'],
-                'status' => $data['status'] ?? true
+                'status' => $data['status'] ?? true,
+                'avatar' => '',
+                'gender' => $data['gender'] ?? true
             ];
+            $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
+            $fileName = '';
             $customer = new Customer($customerData);
+            if ($file) {
+                $fileName = $file->storePubliclyAs(
+                    'images/users',
+                    Str::slug($customer->phone) . time() . '.' . $file->extension()
+                );
+                $customer->avatar = $fileName;
+            };
+
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi tạo mới khách hàng");
             }
@@ -78,6 +91,16 @@ class CustomerController extends Controller
             }
 
             $customer->fill($customerData);
+            $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
+            $fileName = '';
+            $customer = new Customer($customerData);
+            if ($file) {
+                $fileName = $file->storePubliclyAs(
+                    'images/users',
+                    Str::slug($customer->phone) . time() . '.' . $file->extension()
+                );
+                $customer->avatar = $fileName;
+            };
 
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi sửa cửa hàng");

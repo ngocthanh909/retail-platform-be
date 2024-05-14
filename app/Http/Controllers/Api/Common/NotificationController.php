@@ -9,6 +9,7 @@ use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\NotificationTemplate;
+use Illuminate\Support\Facades\DB;
 
 class NotificationController extends Controller
 {
@@ -16,15 +17,14 @@ class NotificationController extends Controller
     function getList(Request $request)
     {
         try {
-            $notifications = Notification
-                ::join('notification_template', 'notifications.template_id', 'notification_template.id')
-                ->where('user_type', $request->user()->tokenCan('customer') ? 1 :  0)
-                ->where('receiver_id', $request->user()->id)
-                ->whereDate('delivery_time', '<=', now())
-                ->orWhere('delivery_time', null)
-                ->orderBy('delivery_time', 'DESC')
-                ->orderBy('notifications.created_at', 'DESC')
-                ->paginate(config('paginate.notification'));
+            $user = $request->user();
+            $notifications = DB::table('notifications AS n')
+            ->select('n.id', 'nt.title', 'nt.content', 'nt.image', 'n.seen', 'n.receiver_id', 'n.user_type', 'n.delivery_time')
+            ->join('notification_template AS nt',function($join) use ($user) {
+                $join->on('n.template_id','=','nt.id')
+                ->where('n.receiver_id','=', $user->id)
+                ->where('n.user_type','=', $user->tokenCan('customer') ? 1 : 0);
+            })->paginate(config('paginate.notification'));
             return $this->success($notifications);
         } catch (\Throwable $e) {
             Log::error($e);

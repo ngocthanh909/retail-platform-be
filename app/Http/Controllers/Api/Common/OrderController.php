@@ -190,12 +190,12 @@ class OrderController extends Controller
             DB::commit();
             $order = $order->load('details');
             $this->sendNotification(
-                $user->id,
+                $customer->id,
                 1,
                 null,
                 false,
-                'Sửa đơn hàng thành công',
-                'Bạn đã sửa đơn hàng thành công',
+                'Sửa đơn hàng',
+                'Bạn đã sửa đơn hàng ' . $order->displayId . ' thành công',
                 ''
             );
             if($customer->responsible_staff){
@@ -238,37 +238,42 @@ class OrderController extends Controller
             DB::commit();
             $messageUser = '';
             $messageAdmin = '';
+            $title = '';
             if($request->status == 2){
+                $title = 'Xác nhận đơn hàng';
                 $messageUser = 'Đơn hàng ' . $order->displayId .  ' của bạn đã được xác nhận';
                 $messageAdmin = 'Đơn hàng ' . $order->displayId . ' đã được xác nhận bởi ' . $user->name;
             }
             if($request->status == 3){
+                $title = 'Hoàn thành đơn hàng';
                 $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã hoàn thành';
                 $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . $user->name;
             }
             if($request->status == 0){
-                $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên.';
+                $title = 'Hủy nhận đơn hàng';
+                $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên phụ trách.';
                 $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . $user->name;
             }
 
             $this->sendNotification(
-                $user->id,
+                $customer->id,
                 1,
-                null,
+                now(),
                 false,
-                '',
+                $title,
                 $messageUser,
                 ''
             );
+            $adminReceiver = [1];
             if($customer->responsible_staff){
                 $adminReceiver[] = $customer->responsible_staff;
             }
             $this->sendNotification(
                 $adminReceiver,
                 0,
-                null,
+                now(),
                 false,
-                '',
+                $title,
                 $messageAdmin,
                 ''
             );
@@ -324,7 +329,7 @@ class OrderController extends Controller
                 $this->sendNotification(
                     $user->id,
                     1,
-                    null,
+                    now(),
                     false,
                     $title,
                     $messageUser,
@@ -336,7 +341,7 @@ class OrderController extends Controller
                 $this->sendNotification(
                     $adminReceiver,
                     0,
-                    null,
+                    now(),
                     false,
                     $title,
                     $messageAdmin,
