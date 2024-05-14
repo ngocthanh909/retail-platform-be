@@ -99,7 +99,6 @@ class AccountController extends Controller
                 "is_admin" => 0,
                 "gender" => $data['gender'] ?? true,
                 "dob" => $data['dob'] ?? null,
-                "avatar" => '',
                 "address" => $data['address'] ?? ''
             ]);
 
