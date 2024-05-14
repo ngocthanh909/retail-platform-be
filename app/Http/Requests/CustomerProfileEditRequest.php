@@ -29,7 +29,7 @@ class CustomerProfileEditRequest extends FormRequest
             'district' => 'required|string|max:50',
             'province' => 'required|string|max:50',
             'avatar' => 'nullable|image|max:2048',
-            'dob' => ['nullable', 'date'],
+            'dob' => 'nullable',
             'gender' => 'nullable|numeric'
         ];
     }
