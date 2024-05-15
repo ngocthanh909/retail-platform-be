@@ -33,9 +33,8 @@ class CustomerRequest extends FormRequest
         return [
             'phone' => "required|string|max:20|unique:$requiredString",
             'password' => request()->id ? "nullable" : "required|string|max:60",
-            'email' => 'nullable|email|max:50',
             'customer_name' => 'required|string|max:200',
-            'responsible_staff' => 'numeric',
+            'responsible_staff' => ['nullable', 'numeric'],
             'address' => 'required|string|max:100',
             'district' => 'required|string|max:50',
             'province' => 'required|string|max:50',

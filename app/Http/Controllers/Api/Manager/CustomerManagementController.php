@@ -71,7 +71,6 @@ class CustomerManagementController extends Controller
             $customerData = [
                 'customer_name' => $data['customer_name'],
                 'phone' => $data['phone'],
-                'email' => $data['email'],
                 'address' => $data['address'] ?? '',
                 'district' => $data['district'] ?? '',
                 'province' => $data['province'] ?? '',
@@ -110,7 +109,6 @@ class CustomerManagementController extends Controller
             $customerData = [
                 'customer_name' => $data['customer_name'],
                 'phone' => $data['phone'],
-                'email' => $data['email'],
                 'address' => $data['address'] ?? '',
                 'district' => $data['district'] ?? '',
                 'province' => $data['province'] ?? '',
