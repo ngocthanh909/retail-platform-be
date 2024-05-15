@@ -12,6 +12,7 @@ use Illuminate\Http\Response;
 use Laravel\Passport\Token;
 use App\Models\User;
 use App\Models\Customer;
+use Exception;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -98,6 +99,9 @@ class AuthController extends Controller
                 'address' => $data['address'],
                 'status' => $data['status'] ?? true
             ];
+            if(User::where('phone', $data['phone'])->first()){
+                throw new Exception('SĐT đã tồn tại trong hệ thống');
+            }
             $customer = new Customer($customerData);
             if(!$customer->save()){
                 return $this->failure("Lỗi khi tạo mới khách hàng");
