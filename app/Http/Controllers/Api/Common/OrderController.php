@@ -288,12 +288,13 @@ class OrderController extends Controller
         }
     }
 
-    public function delete(Request $request, $id)
+    public function delete(Request $request)
     {
         DB::beginTransaction();
         try {
-            $delete = Order::where('id', $id)->delete();
-            $deleteDetail = OrderDetail::where('order_id', $id)->delete();
+            $ids = $request->ids;
+            $delete = Order::whereIn('id', $ids)->delete();
+            $deleteDetail = OrderDetail::where('order_id', $ids)->delete();
             if(!$delete || !$deleteDetail){
                 throw new \Exception('Lỗi xóa đơn hàng');
             }

@@ -152,7 +152,7 @@ Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,empl
     Route::get('{id}', [OrderController::class, 'detail']);
     Route::post('{id}/change_status', [OrderController::class, 'changeStatus']);
     Route::post('{id}/edit', [OrderController::class, 'edit']);
-    Route::post('{id}/delete', [OrderController::class, 'delete'])->middleware(['auth:sanctum', 'ability:admin']);
+    Route::post('delete', [OrderController::class, 'delete'])->middleware(['auth:sanctum', 'ability:admin']);
 });
 //Common
 Route::prefix('common')->group(function(){
