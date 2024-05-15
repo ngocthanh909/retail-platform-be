@@ -393,7 +393,7 @@ class OrderController extends Controller
 
             if ($user->tokenCan('customer')) {
                 if (empty($user?->responsible_staff)) {
-                    $isGuest = false;
+                    $isGuest = true;
                 }
             } else {
                 //Check logic customer is a member or not
