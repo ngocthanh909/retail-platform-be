@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerRegisterRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use DB;
+use Illuminate\Support\Facades\DB;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use Illuminate\Http\Response;
 use Laravel\Passport\Token;
@@ -19,7 +19,6 @@ class AuthController extends Controller
     use ApiResponseTrait;
     public function login(Request $request){
         DB::beginTransaction();
-        DB::enableQueryLog();
         try {
             $credentials = [
                 "phone" => $request->phone,

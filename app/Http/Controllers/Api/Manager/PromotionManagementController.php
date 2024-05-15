@@ -22,7 +22,6 @@ class PromotionManagementController extends Controller
         $status = $request->status !== null ? (int)$request->status : null;
 
         $promote_type = $request->promote_type;
-        DB::enableQueryLog();
 
         $promotions = new Promotion();
         if($start_date){

@@ -447,7 +447,6 @@ class OrderController extends Controller
 
     public function list(Request $request)
     {
-        DB::enableQueryLog();
         $data = $request->all();
         $query = new Order();
         $user = auth('sanctum')->user();

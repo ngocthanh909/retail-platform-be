@@ -44,7 +44,8 @@ class Customer extends Authenticatable
      */
     protected $hidden = [
         'remember_token',
-        'device_token'
+        'device_token',
+        'password'
     ];
 
     /**

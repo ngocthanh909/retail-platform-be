@@ -84,6 +84,7 @@ class Product extends Model
                     return $priceForGuest;
                 }
             }
+
             return $this->price;
         } catch (\Throwable $e) {
             Log::error($e);

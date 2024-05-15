@@ -14,14 +14,12 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\DB;
 
 class CustomerProfileController extends Controller
 {
     use ApiResponseTrait;
     public function edit(CustomerProfileEditRequest $request)
     {
-        DB::enableQueryLog();
         try {
             $data = $request->validated();
             $customer = Customer::findOrFail($request->user()->id);

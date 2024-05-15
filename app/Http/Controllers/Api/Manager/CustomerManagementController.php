@@ -13,6 +13,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
 class CustomerManagementController extends Controller
 {
@@ -124,7 +125,7 @@ class CustomerManagementController extends Controller
 
             $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
             $fileName = '';
-            $customer = new Customer($customerData);
+
             if ($file) {
                 $fileName = $file->storePubliclyAs(
                     'images/users',
@@ -133,10 +134,7 @@ class CustomerManagementController extends Controller
                 $customer->avatar = $fileName;
             };
 
-
             $customer->fill($customerData);
-
-
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi sửa cửa hàng");
             }
