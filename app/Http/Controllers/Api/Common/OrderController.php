@@ -453,7 +453,7 @@ class OrderController extends Controller
             $query = $query->where('customer_id', $user->id);
         } else {
             if($user->tokenCan('employee') && !$user->tokenCan('admin')){
-                $query = $query->where('responsible_staff', $user->id)->orWhere('creator_id', $user->id);
+                $query = $query->where('responsible_staff', $user->id);
             }
             if ($request->customer_id) {
                 $query = $query->where('customer_id', $request->customer_id);
