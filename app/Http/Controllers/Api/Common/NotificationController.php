@@ -21,10 +21,12 @@ class NotificationController extends Controller
             $notifications = DB::table('notifications AS n')
             ->select('n.id', 'nt.title', 'nt.content', 'nt.image', 'n.seen', 'n.receiver_id', 'n.user_type', 'n.delivery_time')
             ->join('notification_template AS nt',function($join) use ($user) {
-                $join->on('n.template_id','=','nt.id')
+                $join
+                ->on('n.template_id','=','nt.id')
                 ->where('n.receiver_id','=', $user->id)
                 ->where('n.user_type','=', $user->tokenCan('customer') ? 1 : 0);
-            })->paginate(config('paginate.notification'));
+            })
+            ->paginate(config('paginate.notification'));
             return $this->success($notifications);
         } catch (\Throwable $e) {
             Log::error($e);
