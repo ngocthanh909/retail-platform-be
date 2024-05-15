@@ -288,6 +288,27 @@ class OrderController extends Controller
         }
     }
 
+    public function delete(Request $request, $id)
+    {
+        DB::beginTransaction();
+        try {
+            $delete = Order::where('id', $id)->delete();
+            $deleteDetail = OrderDetail::where('order_id', $id)->delete();
+            if(!$delete || !$deleteDetail){
+                throw new \Exception('Lỗi xóa đơn hàng');
+            }
+            DB::commit();
+            return $this->success([], 'Đơn hàng đã xóa thành công');
+        } catch (\Throwable $e) {
+            DB::rollback();
+            Log::error($e);
+            if ($e instanceof ModelNotFoundException) {
+                return $this->failure('Không tìm thấy đơn hàng này', $e->getMessage());
+            }
+            return $this->failure('Lỗi xóa đơn hàng', $e->getMessage() . $e->getLine());
+        }
+    }
+
     public function changeMultipleStatus(Request $request)
     {
         $ids = $request->ids ?? [];
@@ -358,6 +379,7 @@ class OrderController extends Controller
             return $this->failure('Lỗi cập nhật đơn hàng', $e->getMessage());
         }
     }
+
     public function calculate($data, $user)
     {
         try {
