@@ -191,7 +191,7 @@ class OrderController extends Controller
             $this->sendNotification(
                 $customer->id,
                 1,
-                null,
+                now()->format('Y-m-d H:i:s'),
                 false,
                 'Sửa đơn hàng',
                 'Bạn đã sửa đơn hàng ' . $order->displayId . ' thành công',
@@ -203,7 +203,7 @@ class OrderController extends Controller
             $this->sendNotification(
                 $adminReceiver,
                 0,
-                null,
+                now()->format('Y-m-d H:i:s'),
                 false,
                 'Sửa',
                 'Đơn của ' . $order->displayId . ' khách hàng ' . $user->customer_name . ' vừa được chỉnh sửa ',
@@ -257,7 +257,7 @@ class OrderController extends Controller
             $this->sendNotification(
                 $customer->id,
                 1,
-                now(),
+                now()->format('Y-m-d H:i:s'),
                 false,
                 $title,
                 $messageUser,
@@ -270,7 +270,7 @@ class OrderController extends Controller
             $this->sendNotification(
                 $adminReceiver,
                 0,
-                now(),
+                now()->format('Y-m-d H:i:s'),
                 false,
                 $title,
                 $messageAdmin,
