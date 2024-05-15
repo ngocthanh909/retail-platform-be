@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Employee;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ChangePasswordRequest;
+use App\Http\Requests\EmployeeProfileEditRequest;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -14,7 +15,7 @@ use Illuminate\Support\Str;
 class EmployeeProfileController extends Controller
 {
     use ApiResponseTrait;
-    function edit(EmployeeProfileController $request)
+    function edit(EmployeeProfileEditRequest $request)
     {
         try {
             $data = $request->validated();

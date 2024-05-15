@@ -27,7 +27,7 @@ class AccountController extends Controller
             if (!empty($keyword)) {
                 $users = $users->where('name', 'like', "%$keyword%");
             }
-            $users = $users->orderBy('name', 'DESC')->paginate(config('paginate.store_list'));
+            $users = $users->where('is_admin', false)->orderBy('name', 'DESC')->paginate(config('paginate.store_list'));
             return $this->success($users);
         } catch (\Exception $e) {
             Log::error($e);
