@@ -68,18 +68,23 @@ class Product extends Model
             $rate = config('app.discount_rate');
             $user = auth('sanctum')->user();
             $priceForGuest = $this->price + ($this->price * $rate / 100);
-
-            if ($user && $user->tokenCan('customer')) {
-                if ($user->responsible_staff) return $this->price;
+            if(!$user){
                 return $priceForGuest;
-            } elseif ($user && ($user->tokenCan('admin') || $user->tokenCan('employee'))) {
+            }
+            if($user && $user->tokenCan('customer')){
+                if ($user->responsible_staff) return $this->price;
+            }
+            if($user && !$user->tokenCan('admin') && $user->tokenCan('employee')){
+                return $this->price;
+            }
+            if ($user && $user->tokenCan('admin')) {
                 if (request()->destination_customer) {
                     $user = Customer::find(request()->destination_customer);
                     if ($user && $user->responsible_staff) return $this->price;
                     return $priceForGuest;
                 }
             }
-            return $priceForGuest;
+            return 0;
         } catch (\Throwable $e) {
             Log::error($e);
             return $this->price;

@@ -446,6 +446,7 @@ class OrderController extends Controller
 
     public function list(Request $request)
     {
+        DB::enableQueryLog();
         $data = $request->all();
         $query = new Order();
         $user = auth('sanctum')->user();
@@ -466,7 +467,7 @@ class OrderController extends Controller
             $query = $query->where('responsible_staff', $request->responsible_staff);
         }
         if ($request->creator) {
-            $query = $query->where('creator', $request->creator);
+            $query = $query->where('creator_id', $request->creator);
         }
 
         if ($request->min_price) {
@@ -489,6 +490,7 @@ class OrderController extends Controller
         }
 
         $orders = $query->with(['staff', 'creator'])->orderBy('created_at', 'DESC')->paginate(config('paginate.order'));
+        dd(DB::getQueryLog());
         return $this->success($orders);
     }
 }
