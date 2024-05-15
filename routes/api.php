@@ -104,7 +104,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
 Route::prefix('notification')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::get('get', [NotificationController::class, 'getList']);
     Route::post('seen', [NotificationController::class, 'seenAction']);
-    Route::post('seenAll', [NotificationController::class, 'seenAllAction']);
+    Route::post('seen-all', [NotificationController::class, 'seenAllAction']);
     Route::post('delete', [NotificationController::class, 'deleteAction']);
 });
 //Group quản lý profile

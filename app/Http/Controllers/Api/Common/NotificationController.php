@@ -22,10 +22,12 @@ class NotificationController extends Controller
             ->select('n.id', 'nt.title', 'nt.content', 'nt.image', 'n.seen', 'n.receiver_id', 'n.user_type', 'n.delivery_time')
             ->join('notification_template AS nt',function($join) use ($user) {
                 $join
-                ->on('n.template_id','=','nt.id')
-                ->where('n.receiver_id','=', $user->id)
-                ->where('n.user_type','=', $user->tokenCan('customer') ? 1 : 0);
+                ->on('n.template_id','=','nt.id');
             })
+            ->where('n.receiver_id','=', $user->id)
+            ->whereDate('delivery_time', '<', now())
+            ->where('n.user_type','=', $user->tokenCan('customer') ? 1 : 0)
+            ->orWhere('n.receiver_id','=', 0)
             ->orderBy('n.delivery_time', 'DESC')
             ->paginate(config('paginate.notification'));
             return $this->success($notifications);
@@ -47,7 +49,7 @@ class NotificationController extends Controller
     function seenAllAction(Request $request)
     {
         try {
-            $delete = Notification::where('receiver_id', $request->user()->id)->where('user_type', $request->tokenCan('employee') ? 0 : 1)->update(['seen' => 1]);
+            $delete = Notification::where('receiver_id', $request->user()->id)->where('user_type', $request->user()->tokenCan('employee') ? 0 : 1)->update(['seen' => 1]);
             if(!$delete){
                 throw new \Exception('Thao tác thất bại');
             }
