@@ -33,7 +33,7 @@ class CustomerRegisterRequest extends FormRequest
         return [
             'phone' => "required|string|max:20|unique:$requiredString",
             'password' => "required|string|max:60|confirmed",
-            'email' => 'nullable|email|max:50',
+            'email' => ['nullable', 'email' => 'max:50'],
             'customer_name' => 'required|string|max:200',
             'address' => 'required|string|max:100',
             'district' => 'required|string|max:50',
