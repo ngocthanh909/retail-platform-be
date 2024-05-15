@@ -156,10 +156,10 @@ Route::prefix('common')->group(function(){
     Route::get('category', [CategoryManagementController::class, 'listAll']);
     Route::get('product-list', [ProductManagementController::class, 'list']);
     Route::get('category-with-product', [CategoryManagementController::class, 'listAllWithProduct']);
-    Route::get('customer', [CustomerManagementController::class, 'listAll']);
     Route::get('banners', [BannerController::class, 'list']);
     Route::get('discount-rate', [CustomerManagementController::class, 'getDiscountRate']);
     Route::middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
+        Route::get('customer', [CustomerManagementController::class, 'listAll']);
         Route::get('user-info', [AuthController::class, 'info']);
         Route::get('employee', [AccountController::class, 'listAllEmployee']);
         Route::get('promotion', [PromotionController::class, 'getUserPromotion']);

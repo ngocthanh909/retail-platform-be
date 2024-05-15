@@ -36,7 +36,12 @@ class CustomerManagementController extends Controller
     public function listAll(Request $request)
     {
         try {
-            $customers = Customer::get();
+            $customers = new Customer();
+            $user = $request->user();
+            if($user->tokenCan('employee') && !$user->tokenCan('admin')){
+                $customers = $customers->where('responsible_staff', $user->id);
+            }
+            $customers = $customers->get();
             return $this->success($customers);
         } catch (\Exception $e) {
             Log::error($e);

@@ -70,7 +70,7 @@ class OrderController extends Controller
             $order = new Order([
                 'customer_id' => $customer->id ?? 0,
                 'responsible_staff' => $customer->responsible_staff ?? 0,
-                'creator_id' => ($user->tokenCan('admin') || $user->tokenCan('employee')) ? $user->id : '',
+                'creator_id' => ($user->tokenCan('admin') || $user->tokenCan('employee')) ? $user->id : 0,
                 'customer_name' => $customer->customer_name ?? ($request->customer_name ?? ''),
                 'phone' => $customer->phone ?? ($request->customer_phone ?? ''),
                 'province' => $customer->province ?? '',
@@ -152,7 +152,6 @@ class OrderController extends Controller
             $order->fill([
                 'customer_id' => $customer->id,
                 'responsible_staff' => $customer->responsible_staff,
-                'creator_id' => ($user->tokenCan('admin') || $user->tokenCan('employee')) ? $user->id : '',
                 'customer_name' => $customer->customer_name,
                 'phone' => $customer->phone,
                 'province' => $customer->province,
@@ -432,7 +431,7 @@ class OrderController extends Controller
             $query = $query->where('customer_id', $user->id);
         } else {
             if($user->tokenCan('employee') && !$user->tokenCan('admin')){
-                $query = $query->where('creator_id', $user->id);
+                $query = $query->where('responsible_staff', $user->id)->orWhere('creator_id', $user->id);
             }
             if ($request->customer_id) {
                 $query = $query->where('customer_id', $request->customer_id);
