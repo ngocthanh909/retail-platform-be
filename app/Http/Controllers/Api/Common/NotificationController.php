@@ -43,10 +43,23 @@ class NotificationController extends Controller
             return $this->failure('Thao tác thất bại', $e->getMessage());
         }
     }
+    function seenAllAction(Request $request)
+    {
+        try {
+            $delete = Notification::where('receiver_id', $request->user()->id)->where('user_type', $request->tokenCan('employee') ? 0 : 1)->update(['seen' => 1]);
+            if(!$delete){
+                throw new \Exception('Thao tác thất bại');
+            }
+            return $this->success();
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return $this->failure('Chuyển trạng thái thông báo thất bại', $e->getMessage());
+        }
+    }
     function deleteAction(Request $request)
     {
         try {
-            $action = $this->deleteNotification($request->id);
+            $this->deleteNotification($request->id);
             return $this->success();
         } catch (\Throwable $e) {
             Log::error($e);
