@@ -30,7 +30,7 @@ class Order extends Authenticatable
     protected $fillable = [
         'customer_id',
         'responsible_staff',
-        'creator',
+        'creator_id',
         'customer_name',
         'phone',
         'province',
