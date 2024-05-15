@@ -109,7 +109,7 @@ class OrderController extends Controller
             $this->sendNotification(
                 $user->id,
                 1,
-                now(),
+                now()->format('Y-m-d H:i:s'),
                 false,
                 'Tạo đơn hàng thành công',
                 'Bạn đã tạo đơn hàng thành công. Mã đơn hàng của bạn là ' . $order->displayId,
@@ -123,7 +123,7 @@ class OrderController extends Controller
             $this->sendNotification(
                 $adminReceiver,
                 0,
-                null,
+                now()->format('Y-m-d H:i:s'),
                 false,
                 'Bạn có đơn hàng mới',
                 'Khách hàng ' . $user->customer_name . ' vừa đặt thành công đơn hàng ' . $order->displayId,

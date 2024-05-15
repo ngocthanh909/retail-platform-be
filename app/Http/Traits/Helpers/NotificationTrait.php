@@ -13,6 +13,7 @@ use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 trait NotificationTrait
 {
