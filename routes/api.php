@@ -127,6 +127,9 @@ Route::prefix('customer')->middleware(['auth:sanctum', 'ability:customer'])->gro
         Route::post("change-password", [CustomerProfileController::class, 'changePassword']);
     });
 });
+Route::prefix('customer')->group(function(){
+    Route::get('/list', [CategoryController::class, 'list']);
+});
 //Group common
 Route::prefix('product')->group(function(){
     Route::get('/list', [ProductController::class, 'list']);
@@ -138,9 +141,7 @@ Route::prefix('category')->group(function(){
     Route::get('/list-for-manager', [CategoryController::class, 'list']);
     Route::get('/{id}', [CategoryController::class, 'detail']);
 });
-Route::prefix('customer')->group(function(){
-    Route::get('/list', [CategoryController::class, 'list']);
-});
+
 
 Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function(){
     Route::post('calculate', [OrderController::class, 'calculateOrder']);

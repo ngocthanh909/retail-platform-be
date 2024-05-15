@@ -26,19 +26,17 @@ class CustomerProfileController extends Controller
 
             $customerData = [
                 'customer_name' => $data['customer_name'],
-                'email' => $data['email'],
+                'email' => $data['email'] ?? '',
+                'gender' => $data['gender'] ? 1 : 0,
                 'address' => $data['address'] ?? '',
                 'district' => $data['district'] ?? '',
                 'province' => $data['province'] ?? '',
-                'address' => $data['address'],
-                'dob' => $data['dob'] ?? '',
-                'gender' => 1
+                'dob' => $data['dob'] ?? null
             ];
             $customer->fill($customerData);
             $originalAvatar = $customer->getRawOriginal('avatar');
             $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
             $fileName = '';
-
             if ($file) {
                 $fileName = $file->storePubliclyAs(
                     'images/users',

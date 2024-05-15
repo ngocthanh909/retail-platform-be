@@ -22,15 +22,14 @@ class CustomerProfileEditRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'email' => 'nullable|email|max:50',
+            'avatar' => ['image' => 'max:2048', 'nullable'],
             'customer_name' => 'required|string|max:200',
-            'responsible_staff' => 'numeric',
+            'email' => ['nullable', 'email' => 'max:50'],
+            'dob' => 'nullable',
+            'gender' => 'nullable',
             'address' => 'required|string|max:100',
             'district' => 'required|string|max:50',
             'province' => 'required|string|max:50',
-            'avatar' => 'nullable|image|max:2048',
-            'dob' => 'nullable',
-            'gender' => 'nullable|numeric'
         ];
     }
 }
