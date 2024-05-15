@@ -31,7 +31,7 @@ class CustomerProfileController extends Controller
                 'address' => $data['address'] ?? '',
                 'district' => $data['district'] ?? '',
                 'province' => $data['province'] ?? '',
-                'dob' => $data['dob'] ?? null
+                'dob' => $data['dob'] ?? '1900-01-01'
             ];
             $customer->fill($customerData);
             $originalAvatar = $customer->getRawOriginal('avatar');
