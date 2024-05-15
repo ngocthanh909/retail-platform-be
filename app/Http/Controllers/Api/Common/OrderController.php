@@ -491,7 +491,6 @@ class OrderController extends Controller
         }
 
         $orders = $query->with(['staff', 'creator'])->orderBy('created_at', 'DESC')->paginate(config('paginate.order'));
-        dd(DB::getQueryLog());
         return $this->success($orders);
     }
 }

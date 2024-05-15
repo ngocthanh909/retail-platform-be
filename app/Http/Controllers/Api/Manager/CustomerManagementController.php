@@ -112,7 +112,7 @@ class CustomerManagementController extends Controller
                 'address' => $data['address'] ?? '',
                 'district' => $data['district'] ?? '',
                 'province' => $data['province'] ?? '',
-                'responsible_staff' => $data['responsible_staff'] ?? 0,
+                'responsible_staff' => $data['responsible_staff'] ?? 1,
                 'address' => $data['address'],
                 'status' => $data['status'] ?? true,
                 'gender' => $data['gender'] ?? 1,
