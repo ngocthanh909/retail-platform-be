@@ -119,7 +119,7 @@ class CustomerManagementController extends Controller
             ];
 
             if (!empty($data['password'])) {
-                $customerData['password'] = Hash::make($data["password"]);
+                $customerData['password'] = Hash::make($data["password"] ?? '');
             }
 
             $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
@@ -135,6 +135,7 @@ class CustomerManagementController extends Controller
 
 
             $customer->fill($customerData);
+
 
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi sửa cửa hàng");

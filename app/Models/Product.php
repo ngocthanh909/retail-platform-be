@@ -72,7 +72,7 @@ class Product extends Model
                 return $priceForGuest;
             }
             if($user && $user->tokenCan('customer')){
-                if ($user->responsible_staff) return $this->price;
+                return $user->responsible_staff ? $this->price : $priceForGuest;
             }
             if($user && !$user->tokenCan('admin') && $user->tokenCan('employee')){
                 return $this->price;
