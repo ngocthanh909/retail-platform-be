@@ -25,7 +25,7 @@ class CustomerProfileEditRequest extends FormRequest
             'avatar' => ['image' => 'max:2048', 'nullable'],
             'customer_name' => 'required|string|max:200',
             'email' => ['nullable', 'email' => 'max:50'],
-            'dob' => 'nullable',
+            'dob' => ['nullable', 'date'],
             'gender' => 'nullable',
             'address' => 'required|string|max:100',
             'district' => 'required|string|max:50',

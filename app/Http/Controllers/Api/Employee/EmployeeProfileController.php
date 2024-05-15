@@ -14,17 +14,16 @@ use Illuminate\Support\Str;
 class EmployeeProfileController extends Controller
 {
     use ApiResponseTrait;
-    function edit(Request $request)
+    function edit(EmployeeProfileController $request)
     {
         try {
-            $data = $request->all();
+            $data = $request->validated();
             $user = User::findOrFail($request->user()->id);
             $user->fill([
-                "name" => $request->name,
-                "email" => $request->email,
+                "name" => $data['name'] ?? '',
+                "email" => $data['email'] ?? '',
                 "gender" => $data['gender'] ?? true,
-                "dob" => $data['dob'] ?? null,
-                "avatar" => '',
+                "dob" => $data['dob'] ?? '1900-01-01',
                 "address" => $data['address'] ?? ''
             ]);
 
