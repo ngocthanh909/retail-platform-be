@@ -44,8 +44,7 @@ class AuthController extends Controller
                     $abilities[] = 'admin';
                     $role = "admin";
                 }
-            }
-            if($checkCustomer && $this->guardCustomer()->attempt($credentials)){
+            } elseif($checkCustomer && $this->guardCustomer()->attempt($credentials)){
                 $user = $this->guardCustomer()->user();
                 $abilities[] = 'customer';
                 $role = 'customer';
