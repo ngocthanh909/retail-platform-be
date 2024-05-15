@@ -26,6 +26,7 @@ class NotificationController extends Controller
                 ->where('n.receiver_id','=', $user->id)
                 ->where('n.user_type','=', $user->tokenCan('customer') ? 1 : 0);
             })
+            ->orderBy('n.delivery_time', 'DESC')
             ->paginate(config('paginate.notification'));
             return $this->success($notifications);
         } catch (\Throwable $e) {
