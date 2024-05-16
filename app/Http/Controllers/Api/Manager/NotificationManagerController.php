@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Manager;
 use App\Http\Controllers\Controller;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Http\Traits\Helpers\NotificationTrait;
+use App\Jobs\SendAutomaticNotification;
 use App\Models\Notification;
 use App\Models\NotificationTemplate;
 use Illuminate\Http\Request;

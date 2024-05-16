@@ -186,5 +186,6 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
-    'discount_rate' => env('GUEST_PRICE_CHANGE_RATE', 0)
+    'discount_rate' => env('GUEST_PRICE_CHANGE_RATE', 0),
+    'fcm_app_name' => env('FCM_PROJECT_ID', 'dang-khoa-51e86')
 ];
