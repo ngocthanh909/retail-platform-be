@@ -255,7 +255,7 @@ class OrderController extends Controller
             }
 
             $this->sendNotification(
-                $customer->id,
+                $customer->id ?? '',
                 1,
                 now()->format('Y-m-d H:i:s'),
                 false,
