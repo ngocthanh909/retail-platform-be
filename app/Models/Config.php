@@ -15,8 +15,13 @@ class Config extends Model
         return $config->value ?? '';
     }
     public static function editConfig($key, $value){
-        $config = self::where('key', $key)->updateOrCreate(['key' => $key, 'value' => $value]);
-        return $config ? true : false;
+        $config = self::where('key', $key)->first();
+        if($config){
+            $config->value = $value;
+            return $config->save();
+        }
+        $config = new Config(['key' => $key, 'value' => $value]);
+        return $config->save();
     }
 
 }

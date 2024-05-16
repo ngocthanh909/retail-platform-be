@@ -2,7 +2,6 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Notification;
 use Illuminate\Console\Command;
 
 class SendAutoNotification extends Command
@@ -26,5 +25,6 @@ class SendAutoNotification extends Command
      */
     public function handle()
     {
+
     }
 }

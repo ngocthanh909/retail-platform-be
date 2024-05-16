@@ -37,6 +37,17 @@ trait NotificationTrait
                     'sent' => $sendNow
                 ]);
                 $notification->save();
+
+                if ($sendNow) {
+                    if ($userType == 0) {
+                        $user = User::find($receiverId);
+                    } else {
+                        $user = Customer::find($receiverId);
+                    }
+                    if ($user && $user->device_token) {
+                        SendAutomaticNotification::dispatch($user->device_token, $title, $content);
+                    }
+                }
             }
         } else {
             $notification = new Notification([
@@ -48,21 +59,26 @@ trait NotificationTrait
                 'sent' => $sendNow
             ]);
             $notification->save();
+            if ($sendNow) {
+                if ($userType == 0) {
+                    $user = User::find($id);
+                } else {
+                    $user = Customer::find($id);
+                }
+                if ($user && $user->device_token) {
+                    SendAutomaticNotification::dispatch($user->device_token, $title, $content);
+                }
+            }
         }
 
         $save = $notification->save();
         $user = null;
 
-        if($sendNow){
-            if($userType == 0){
-                $user = User::find($id);
-            } else {
-                $user = Customer::find($id);
-            }
-            if($user && $user->device_token){
-                SendAutomaticNotification::dispatch('', $title, $content);
-            }
-        }
+        // try {
+
+        // } catch(\Throwable $e){
+        //     dd($e);
+        // }
 
         return $save;
     }
@@ -107,23 +123,28 @@ trait NotificationTrait
     }
     function sendFirebaseNotification($token, $title = 'Đăng Khoa', $content = '')
     {
-        $authKeyContent = json_decode(File::get(storage_path('firebase-adminsdk.json')), true);
-        $projectID = config('app.fcm_app_name');
-        $body = [
-            'message' => [
-                'token' => $token,
-                'notification' => [
-                    'title' => $title,
-                    'body' => $content,
+        try {
+            $authKeyContent = json_decode(File::get(storage_path('firebase-adminsdk.json')), true);
+            $projectID = config('app.fcm_app_name');
+            Log::info("Send to $token");
+            $body = [
+                'message' => [
+                    'token' => $token,
+                    'notification' => [
+                        'title' => $title,
+                        'body' => $content,
+                    ],
+                    'data' => [
+                        'story_id' => 'notification',
+                    ],
                 ],
-                'data' => [
-                    'story_id' => 'notification',
-                ],
-            ],
-        ];
+            ];
 
-        $bearerToken = FCM::getBearerToken($authKeyContent);
+            $bearerToken = FCM::getBearerToken($authKeyContent);
 
-        FCM::send($bearerToken, $projectID, $body);
+            FCM::send($bearerToken, $projectID, $body);
+        } catch (\Throwable $e) {
+            Log::error($e);
+        }
     }
 }
