@@ -18,7 +18,7 @@ class NotificationManagerController extends Controller
     function create(Request $request){
         try {
             $sendNotifi = $this->sendNotification(
-                is_array($request->ids) ? $request->ids : 0,
+                $request->receiver_id,
                 1,
                 $request->delivery_time,
                 true,
