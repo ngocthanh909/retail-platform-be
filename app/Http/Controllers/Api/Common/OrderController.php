@@ -182,7 +182,13 @@ class OrderController extends Controller
             $orderDetails = [];
             OrderDetail::where('order_id', $order->id)->delete();
 
+            $orderCommission = 0;
             foreach ($responseData['products'] ?? [] as $product) {
+                $originalProduct = Product::join('categories', 'products.category_id', 'categories.id')->where('products.id', $product['id'])
+                ->select('categories.id', 'categories.category_name', 'categories.commission_rate')->first();
+                $totalCommission = $originalProduct->commission_rate * ($product['price'] * $product['qty']) / 100;
+                $orderCommission += $totalCommission;
+
                 $orderDetails[] = [
                     'order_id' => $order->id,
                     'product_id' => $product['id'],
@@ -192,12 +198,18 @@ class OrderController extends Controller
                     'qty' => $product['qty'],
                     'total' => $product['price'] * $product['qty'],
                     'product_image' => $product['product_image'],
-                    'discount' => 0
+                    'discount' => 0,
+                    'category_id' => $originalProduct->id ?? 0,
+                    'category_name' => $originalProduct->category_name ?? '',
+                    'category_commission_rate' => $originalProduct->commission_rate ?? 0,
+                    'category_commission_amount' => $totalCommission
                 ];
             }
             if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi cập nhật chi tiết đơn hàng');
             };
+            $order->total_commission = $orderCommission;
+            $order->save();
             DB::commit();
             $order = $order->load('details');
             $this->sendNotification(

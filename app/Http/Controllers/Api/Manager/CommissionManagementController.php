@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Api\Manager;
 
 use App\Http\Controllers\Controller;
 use App\Http\Traits\Helpers\ApiResponseTrait;
+use App\Models\Order;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CommissionManagementController extends Controller
 {
@@ -62,7 +65,7 @@ class CommissionManagementController extends Controller
             }
 
             $employeeId = $request->employee_id;
-            $employee = User::find($employeeId);
+            $employee = User::findOrFail($employeeId);
             $dateCondition = "and DATE(o.created_at) > '$start' and DATE(o.created_at) <= '$end'";
             $customerOrderByTime = DB::select("select distinct customer_id, customer_name, phone,  concat(address, ',', district, ',', province) as full_address from orders o where o.status = 3 and o.responsible_staff = $employeeId $dateCondition");
             foreach ($customerOrderByTime as $customerCommission) {
@@ -75,7 +78,72 @@ class CommissionManagementController extends Controller
             }
             return $this->success($customerOrderByTime);
         } catch (\Throwable $e) {
+            Log::error($e);
+            if ($e instanceof ModelNotFoundException) {
+                return $this->failure('Lỗi lấy báo cáo hoa hồng', 'Không tìm thấy nhân viên này');
+            }
             return $this->failure('Lỗi lấy báo cáo hoa hồng', $e->getMessage());
+        }
+    }
+
+    function getEmployeeStoreCommission(Request $request)
+    {
+        try {
+            $data = $request->all();
+            $dateRange = $data['range'] ?? false;
+            $start = null;
+            $end = null;
+            if ($dateRange) {
+                switch ($dateRange) {
+                    case 'today':
+                        $start = now()->format('Y-m-d');
+                        break;
+                    case 'this_week':
+                        $start = now()->startOfWeek()->format('Y-m-d');
+                        $end = now()->endOfWeek()->format('Y-m-d');
+                        break;
+                    case 'last_week':
+                        $start = now()->subWeek()->startOfWeek()->format('Y-m-d');
+                        $end = now()->subWeek()->endOfWeek()->format('Y-m-d');
+                        break;
+                    case 'this_month':
+                        $start = now()->startOfMonth()->format('Y-m-d');
+                        $end = now()->endOfMonth()->format('Y-m-d');
+                        break;
+                    case 'last_month':
+                        $start = now()->subMonth()->startOfMonth()->format('Y-m-d');
+                        $end = now()->subMonth()->endOfMonth()->format('Y-m-d');
+                        break;
+                    case 'this_year':
+                        $start = now()->startOfYear()->format('Y-m-d');
+                        $end = now()->endOfYear()->format('Y-m-d');
+                        break;
+                    case 'last_year':
+                        $start = now()->subYear()->startOfYear()->format('Y-m-d');
+                        $end = now()->subYear()->endOfYear()->format('Y-m-d');
+                        break;
+                    default:
+                        $dateRangeDt = explode(',', $dateRange);
+                        if(isset($dateRangeDt[0])){
+                            $start = Carbon::make($dateRangeDt[0])->format('Y-m-d');
+                        }
+                        if(isset($dateRangeDt[1])){
+                            $end = Carbon::make($dateRangeDt[1])->format('Y-m-d');
+                        }
+                        break;
+                }
+            }
+
+            $employeeId = $request->employee_id;
+            $customerId = $request->customer_id;
+            $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereDate('created_at', '>=', $start)->whereDate('created_at', '>=', $end)->get();
+            return $this->success($orders);
+        } catch (\Throwable $e) {
+            Log::error($e);
+            if ($e instanceof ModelNotFoundException) {
+                return $this->failure('Lỗi lấy báo cáo hoa hồng theo khách hàng', 'Không tìm thấy nhân viên này');
+            }
+            return $this->failure('Lỗi lấy báo cáo hoa hồng theo khách hàng', $e->getMessage());
         }
     }
 }

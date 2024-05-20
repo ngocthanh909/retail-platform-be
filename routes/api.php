@@ -99,6 +99,7 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     });
     Route::prefix('commission')->group(function(){
         Route::get('by-employee', [CommissionManagementController::class, 'getEmployeesCommission']);
+        Route::get('by-employee-specific-store', [CommissionManagementController::class, 'getEmployeeStoreCommission']);
     });
     Route::prefix('profile')->group(function(){
         Route::post("edit", [EmployeeProfileController::class, 'edit']);
