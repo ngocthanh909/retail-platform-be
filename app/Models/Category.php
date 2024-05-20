@@ -11,7 +11,7 @@ class Category extends Model
 {
     use HasFactory;
     protected $table = 'categories';
-    protected $fillable = ['category_name', 'category_code', 'category_image'];
+    protected $fillable = ['category_name', 'category_code', 'category_image', 'commission_rate'];
     protected $appends = ['category_image_storage_path'];
 
     protected function categoryImage(): Attribute

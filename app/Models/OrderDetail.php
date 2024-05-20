@@ -24,7 +24,11 @@ class OrderDetail extends Authenticatable
         'qty',
         'discount',
         'total',
-        'product_image'
+        'product_image',
+        'category_id',
+        'category_name',
+        'category_commission_rate',
+        'category_commission_amount'
     ];
 
     protected function productImage(): Attribute

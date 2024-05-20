@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9c491b8531eec05ba41a11d9276a5749",
+    "content-hash": "9ff454f2e8f9c268ea47c6ca624a2496",
     "packages": [
         {
             "name": "brick/math",
@@ -1049,6 +1049,16 @@
                 }
             ],
             "time": "2023-12-03T19:50:20+00:00"
+        },
+        {
+            "name": "kedniko/firebase-cloud-messaging-http-v1-php",
+            "version": "master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/phpdev-irtech/firebase-cloud-messaging-http-v1-php.git",
+                "reference": "master"
+            },
+            "type": "library"
         },
         {
             "name": "laravel/framework",
@@ -8135,7 +8145,9 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {
+        "kedniko/firebase-cloud-messaging-http-v1-php": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {

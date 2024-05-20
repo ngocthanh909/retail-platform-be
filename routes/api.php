@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\Employee\CustomerController;
 use App\Http\Controllers\Api\Manager\ProductManagementController;
 use App\Http\Controllers\Api\Manager\PromotionManagementController;
 use App\Http\Controllers\Api\Manager\ReportManagementController;
+use App\Http\Controllers\Api\Manager\CommissionManagementController;
 use App\Models\Customer;
 use App\Models\Notification;
 
@@ -95,6 +96,9 @@ Route::prefix('manager')->middleware(['auth:sanctum', 'ability:admin'])->group(f
     });
     Route::prefix('report')->group(function(){
         Route::get('/', [ReportManagementController::class, 'report']);
+    });
+    Route::prefix('commission')->group(function(){
+        Route::get('by-employee', [CommissionManagementController::class, 'getEmployeesCommission']);
     });
     Route::prefix('profile')->group(function(){
         Route::post("edit", [EmployeeProfileController::class, 'edit']);

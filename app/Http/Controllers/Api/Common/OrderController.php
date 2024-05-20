@@ -87,8 +87,13 @@ class OrderController extends Controller
             if (!$order->save()) throw new Exception('Lỗi trong quá trình tạo đơn hàng');
 
             $orderDetails = [];
-
+            $orderCommission = 0;
             foreach ($responseData['products'] ?? [] as $product) {
+                $originalProduct = Product::join('categories', 'products.category_id', 'categories.id')->where('products.id', $product['id'])
+                ->select('categories.id', 'categories.category_name', 'categories.commission_rate')->first();
+
+                $totalCommission = $originalProduct->commission_rate * ($product['price'] * $product['qty']) / 100;
+                $orderCommission += $totalCommission;
                 $orderDetails[] = [
                     'order_id' => $order->id,
                     'product_id' => $product['id'],
@@ -99,12 +104,19 @@ class OrderController extends Controller
                     'discount' => 0,
                     'total' => $product['price'] * $product['qty'],
                     'product_image' => $product['product_image'],
+                    'category_id' => $originalProduct->id ?? 0,
+                    'category_name' => $originalProduct->category_name ?? '',
+                    'category_commission_rate' => $originalProduct->commission_rate ?? 0,
+                    'category_commission_amount' => $totalCommission
                 ];
             }
+
             if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi tạo chi tiết đơn hàng');
             };
             DB::commit();
+            $order->total_commission = $orderCommission;
+            $order->save();
             $order = $order->load('details');
             $this->sendNotification(
                 $user->id,

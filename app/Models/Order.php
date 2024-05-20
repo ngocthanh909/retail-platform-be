@@ -42,7 +42,8 @@ class Order extends Authenticatable
         'discount_note',
         'discount',
         'note',
-        'status'
+        'status',
+        'total_commission'
     ];
 
     public function getDisplayIdAttribute()

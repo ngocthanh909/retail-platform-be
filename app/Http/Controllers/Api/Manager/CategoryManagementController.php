@@ -53,7 +53,8 @@ class CategoryManagementController extends Controller
                 'category_name' => $data['category_name'],
                 'category_code' => $data['category_code'],
                 'status' => $data['status'] ?? 1,
-                'category_image' => ''
+                'category_image' => '',
+                'commission_rate' => $data['commission_rate'] ?? 0
             ]);
             $file = $request->hasFile('category_image') ? $request->File('category_image') : null;
             if ($file) {
@@ -85,7 +86,8 @@ class CategoryManagementController extends Controller
             $category->fill([
                 'category_name' => $data['category_name'],
                 'category_code' => $data['category_code'],
-                'status' => $data['status'] ?? 1
+                'status' => $data['status'] ?? $category->status,
+                'commission_rate' => $data['commission_rate'] ?? 0
             ]);
             $file = $request->hasFile('category_image') ? $request->File('category_image') : null;
             if ($file) {
