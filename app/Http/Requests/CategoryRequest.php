@@ -34,7 +34,7 @@ class CategoryRequest extends FormRequest
             'category_image' => 'nullable|image|max:2048',
             'category_code' => "required|string|max:100|unique:$requiredString",
             'status' => 'nullable',
-            'commission_name' => ['nullable', 'double' => 'min:0|max:100']
+            'commission_rate' => ['nullable', 'double' => 'max:100']
         ];
     }
 }

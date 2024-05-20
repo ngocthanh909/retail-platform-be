@@ -76,7 +76,8 @@ class CommissionManagementController extends Controller
                 $customerCommission->employee_name = $employee->name ?? '';
                 $customerCommission->employee_id = $employee->id ?? '';
             }
-            return $this->success($customerOrderByTime);
+            $sum = array_sum(data_get($customerOrderByTime, '*.order_commission'));
+            return $this->success(['list' => $customerOrderByTime, 'total' => $sum]);
         } catch (\Throwable $e) {
             Log::error($e);
             if ($e instanceof ModelNotFoundException) {
@@ -137,7 +138,8 @@ class CommissionManagementController extends Controller
             $employeeId = $request->employee_id;
             $customerId = $request->customer_id;
             $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereDate('created_at', '>=', $start)->whereDate('created_at', '>=', $end)->get();
-            return $this->success($orders);
+            $sum = array_sum(data_get($orders, '*.total_commission'));
+            return $this->success(['list' => $orders, 'total' => $sum]);
         } catch (\Throwable $e) {
             Log::error($e);
             if ($e instanceof ModelNotFoundException) {
