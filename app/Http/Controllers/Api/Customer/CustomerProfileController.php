@@ -7,6 +7,8 @@ use App\Http\Requests\CustomerProfileEditRequest;
 use App\Http\Requests\CustomerRequest;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Models\Customer;
+use App\Models\District;
+use App\Models\Province;
 use App\Models\User;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -23,14 +25,16 @@ class CustomerProfileController extends Controller
         try {
             $data = $request->validated();
             $customer = Customer::findOrFail($request->user()->id);
-
+            $district = District::where('district_code', $data['district_id'] ?? '')->first();
+            $province = Province::where('province_code', $data['province_id'] ?? '')->first();
             $customerData = [
                 'customer_name' => $data['customer_name'],
-                'email' => $data['email'] ?? '',
                 'gender' => $data['gender'] ? 1 : 0,
                 'address' => $data['address'] ?? '',
-                'district' => $data['district'] ?? '',
-                'province' => $data['province'] ?? '',
+                'district' => $district->district_name ?? '',
+                'province' => $province->province_name ?? '',
+                'district_id' => $data['district_id'] ?? 0,
+                'province_id' => $data['province_id'] ?? 0,
                 'dob' => $data['dob'] ?? '1900-01-01'
             ];
             $customer->fill($customerData);
@@ -47,7 +51,7 @@ class CustomerProfileController extends Controller
             if (!$customer->save()) {
                 return $this->failure("Lỗi khi sửa hồ sơ");
             }
-            if(!empty($originalAvatar)){
+            if (!empty($originalAvatar)) {
                 Storage::delete($originalAvatar);
             }
             return $this->success($customer, 'Sửa hồ sơ thành công');
@@ -66,7 +70,7 @@ class CustomerProfileController extends Controller
             $data = $request->all();
             $user = Customer::findOrFail($request->user()->id);
 
-            if(!Hash::check($data['current_password'] ?? '', $user->password)){
+            if (!Hash::check($data['current_password'] ?? '', $user->password)) {
                 throw new \Exception("Mật khẩu cũ không khớp");
             }
             if (!empty($data['password'])) {

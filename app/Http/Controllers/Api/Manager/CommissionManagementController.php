@@ -54,10 +54,10 @@ class CommissionManagementController extends Controller
                         break;
                     default:
                         $dateRangeDt = explode(',', $dateRange);
-                        if(isset($dateRangeDt[0])){
+                        if (isset($dateRangeDt[0])) {
                             $start = Carbon::make($dateRangeDt[0])->format('Y-m-d');
                         }
-                        if(isset($dateRangeDt[1])){
+                        if (isset($dateRangeDt[1])) {
                             $end = Carbon::make($dateRangeDt[1])->format('Y-m-d');
                         }
                         break;
@@ -65,9 +65,11 @@ class CommissionManagementController extends Controller
             }
 
             $employeeId = $request->employee_id;
+            $customerId = $request->customer_id;
             $employee = User::findOrFail($employeeId);
-            $dateCondition = "and DATE(o.created_at) > '$start' and DATE(o.created_at) <= '$end'";
-            $customerOrderByTime = DB::select("select distinct customer_id, customer_name, phone,  concat(address, ',', district, ',', province) as full_address from orders o where o.status = 3 and o.responsible_staff = $employeeId $dateCondition");
+            $dateCondition = "and DATE(o.created_at) >= '$start' and DATE(o.created_at) <= '$end'";
+            $customerCondition = $customerId ? "and o.customer_id = $customerId" : '';
+            $customerOrderByTime = DB::select("select distinct customer_id, customer_name, phone,  concat(address, ',', district, ',', province) as full_address from orders o where o.status = 3 and o.responsible_staff = $employeeId $dateCondition $customerCondition");
             foreach ($customerOrderByTime as $customerCommission) {
                 $customerId = $customerCommission->customer_id;
                 $detailCommissionInfo = DB::select("select count(o.id) order_count, sum(o.total_commission) total_commission from orders o where o.responsible_staff = $employeeId and  o.status = 3 and o.customer_id = $customerId $dateCondition group by customer_id limit 1");
@@ -125,10 +127,10 @@ class CommissionManagementController extends Controller
                         break;
                     default:
                         $dateRangeDt = explode(',', $dateRange);
-                        if(isset($dateRangeDt[0])){
+                        if (isset($dateRangeDt[0])) {
                             $start = Carbon::make($dateRangeDt[0])->format('Y-m-d');
                         }
-                        if(isset($dateRangeDt[1])){
+                        if (isset($dateRangeDt[1])) {
                             $end = Carbon::make($dateRangeDt[1])->format('Y-m-d');
                         }
                         break;
@@ -137,7 +139,7 @@ class CommissionManagementController extends Controller
 
             $employeeId = $request->employee_id;
             $customerId = $request->customer_id;
-            $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereDate('created_at', '>=', $start)->whereDate('created_at', '>=', $end)->get();
+            $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end)->get();
             $sum = array_sum(data_get($orders, '*.total_commission'));
             return $this->success(['list' => $orders, 'total' => $sum]);
         } catch (\Throwable $e) {

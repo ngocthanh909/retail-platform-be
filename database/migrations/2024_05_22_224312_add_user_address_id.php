@@ -1,0 +1,30 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    private $table = 'customers';
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table($this->table, function (Blueprint $table) {
+            $table->integer('province_id')->default(0);
+            $table->integer('district_id')->default(0);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        if (Schema::hasColumns($this->table, ['province_id', 'district_id'])) {
+            Schema::dropColumns($this->table, ['province_id', 'district_id']);
+        };
+    }
+};

@@ -27,7 +27,7 @@ class CustomerRegisterRequest extends FormRequest
         $id = request()->id;
         $table = (new Customer())->getTable();
         $requiredString = "$table,phone";
-        if($id){
+        if ($id) {
             $requiredString .= ",$id";
         }
         return [
@@ -36,8 +36,8 @@ class CustomerRegisterRequest extends FormRequest
             'email' => ['nullable', 'email' => 'max:50'],
             'customer_name' => 'required|string|max:200',
             'address' => 'required|string|max:100',
-            'district' => 'required|string|max:50',
-            'province' => 'required|string|max:50',
+            'district_id' => 'required|numeric',
+            'province_id' => 'required|numeric',
             'status' => 'nullable',
         ];
     }

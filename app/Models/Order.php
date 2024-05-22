@@ -35,6 +35,8 @@ class Order extends Authenticatable
         'phone',
         'province',
         'district',
+        'province_id',
+        'district_id',
         'address',
         'subtotal',
         'total',
@@ -51,13 +53,16 @@ class Order extends Authenticatable
         return "DH" . str_pad($this->id, 7, 0, STR_PAD_LEFT);
     }
 
-    public function details(){
+    public function details()
+    {
         return $this->hasMany(OrderDetail::class, 'order_id', 'id');
     }
-    public function staff(){
+    public function staff()
+    {
         return $this->belongsTo(User::class, 'responsible_staff', 'id');
     }
-    public function creator(){
+    public function creator()
+    {
         return $this->belongsTo(User::class, 'creator_id', 'id');
     }
 }
