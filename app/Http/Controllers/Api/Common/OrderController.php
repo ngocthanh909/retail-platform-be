@@ -17,6 +17,8 @@ use App\Models\Order;
 use App\Models\OrderDetail;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\Promotion;
+use App\Models\PromotionCustomer;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -67,6 +69,7 @@ class OrderController extends Controller
             $responseData = $this->calculate($data, $user);
 
 
+
             $order = new Order([
                 'customer_id' => $customer->id ?? 0,
                 'responsible_staff' => $customer->responsible_staff ?? 0,
@@ -84,13 +87,16 @@ class OrderController extends Controller
                 'note' => $data['note'] ?? '',
                 'status' => 1
             ]);
+
+
+
             if (!$order->save()) throw new Exception('Lỗi trong quá trình tạo đơn hàng');
 
             $orderDetails = [];
             $orderCommission = 0;
             foreach ($responseData['products'] ?? [] as $product) {
                 $originalProduct = Product::join('categories', 'products.category_id', 'categories.id')->where('products.id', $product['id'])
-                ->select('categories.id', 'categories.category_name', 'categories.commission_rate')->first();
+                    ->select('categories.id', 'categories.category_name', 'categories.commission_rate')->first();
 
                 $totalCommission = $originalProduct->commission_rate * ($product['price'] * $product['qty']) / 100;
                 $orderCommission += $totalCommission;
@@ -111,6 +117,9 @@ class OrderController extends Controller
                 ];
             }
 
+            $applyVoucherResult = $this->applyVoucher('VLXX', $customer->id, $order, []);
+            dd($applyVoucherResult);
+
             if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi tạo chi tiết đơn hàng');
             };
@@ -129,7 +138,7 @@ class OrderController extends Controller
             );
             $adminReceiver = [1];
 
-            if($customer->responsible_staff){
+            if ($customer->responsible_staff) {
                 $adminReceiver[] = $customer->responsible_staff;
             }
             $this->sendNotification(
@@ -185,7 +194,7 @@ class OrderController extends Controller
             $orderCommission = 0;
             foreach ($responseData['products'] ?? [] as $product) {
                 $originalProduct = Product::join('categories', 'products.category_id', 'categories.id')->where('products.id', $product['id'])
-                ->select('categories.id', 'categories.category_name', 'categories.commission_rate')->first();
+                    ->select('categories.id', 'categories.category_name', 'categories.commission_rate')->first();
                 $totalCommission = $originalProduct->commission_rate * ($product['price'] * $product['qty']) / 100;
                 $orderCommission += $totalCommission;
 
@@ -221,7 +230,7 @@ class OrderController extends Controller
                 'Bạn đã sửa đơn hàng ' . $order->displayId . ' thành công',
                 ''
             );
-            if($customer->responsible_staff){
+            if ($customer->responsible_staff) {
                 $adminReceiver[] = $customer->responsible_staff;
             }
             $this->sendNotification(
@@ -262,17 +271,17 @@ class OrderController extends Controller
             $messageUser = '';
             $messageAdmin = '';
             $title = '';
-            if($request->status == 2){
+            if ($request->status == 2) {
                 $title = 'Xác nhận đơn hàng';
                 $messageUser = 'Đơn hàng ' . $order->displayId .  ' của bạn đã được xác nhận';
                 $messageAdmin = 'Đơn hàng ' . $order->displayId . ' đã được xác nhận bởi ' . $user->name;
             }
-            if($request->status == 3){
+            if ($request->status == 3) {
                 $title = 'Hoàn thành đơn hàng';
                 $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã hoàn thành';
                 $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . $user->name;
             }
-            if($request->status == 0){
+            if ($request->status == 0) {
                 $title = 'Hủy nhận đơn hàng';
                 $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên phụ trách.';
                 $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . $user->name;
@@ -288,7 +297,7 @@ class OrderController extends Controller
                 ''
             );
             $adminReceiver = [1];
-            if($customer->responsible_staff){
+            if ($customer->responsible_staff) {
                 $adminReceiver[] = $customer->responsible_staff;
             }
             $this->sendNotification(
@@ -319,7 +328,7 @@ class OrderController extends Controller
             $ids = $request->ids;
             $delete = Order::whereIn('id', $ids)->delete();
             $deleteDetail = OrderDetail::where('order_id', $ids)->delete();
-            if(!$delete || !$deleteDetail){
+            if (!$delete || !$deleteDetail) {
                 throw new \Exception('Lỗi xóa đơn hàng');
             }
             DB::commit();
@@ -341,7 +350,7 @@ class OrderController extends Controller
         $user = $request->user();
         try {
             $successCount = 0;
-            foreach($ids as $id){
+            foreach ($ids as $id) {
                 if (((int)$request->status < 0) || ((int)$request->status > 3)) {
                     return $this->failure('Trạng thái không hợp lệ');
                 }
@@ -355,17 +364,17 @@ class OrderController extends Controller
                 $messageUser = '';
                 $messageAdmin = '';
                 $title = '';
-                if($request->status == 2){
+                if ($request->status == 2) {
                     $title = 'Xác nhận đơn hàng';
                     $messageUser = 'Đơn hàng ' . $order->displayId .  ' của bạn đã được xác nhận';
                     $messageAdmin = 'Đơn hàng ' . $order->displayId . ' đã được xác nhận bởi ' . $user->name;
                 }
-                if($request->status == 3){
+                if ($request->status == 3) {
                     $title = 'Hoàn thành đơn hàng';
                     $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã hoàn thành';
                     $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . ($user->name ?? $customer->customer_name);
                 }
-                if($request->status == 0){
+                if ($request->status == 0) {
                     $title = 'Hủy đơn hàng';
                     $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên.';
                     $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . ($user->name ?? $customer->customer_name);
@@ -380,7 +389,7 @@ class OrderController extends Controller
                     $messageUser,
                     ''
                 );
-                if($customer->responsible_staff){
+                if ($customer->responsible_staff) {
                     $adminReceiver[] = $customer->responsible_staff;
                 }
                 $this->sendNotification(
@@ -394,7 +403,7 @@ class OrderController extends Controller
                 );
             }
             DB::commit();
-            return $this->success([], $successCount .' đơn hàng đã sửa trạng thái thành công');
+            return $this->success([], $successCount . ' đơn hàng đã sửa trạng thái thành công');
         } catch (\Throwable $e) {
             DB::rollback();
             Log::error($e);
@@ -477,7 +486,7 @@ class OrderController extends Controller
         if ($user->tokenCan('customer')) {
             $query = $query->where('customer_id', $user->id);
         } else {
-            if($user->tokenCan('employee') && !$user->tokenCan('admin')){
+            if ($user->tokenCan('employee') && !$user->tokenCan('admin')) {
                 $query = $query->where('responsible_staff', $user->id);
             }
             if ($request->customer_id) {
@@ -515,5 +524,32 @@ class OrderController extends Controller
 
         $orders = $query->with(['staff', 'creator'])->orderBy('created_at', 'DESC')->paginate(config('paginate.order'));
         return $this->success($orders);
+    }
+
+    public function applyVoucher($code, $customer_id, $order, $details)
+    {
+        try {
+            if (!$code) {
+                return false;
+            }
+            $promotion = Promotion::where('code', $code)
+                ->where('start_date', '>=', now())
+                ->where('end_date', '<=', now())
+                ->whereRaw('`used` < `qty`')
+                ->first();
+
+            if (!$promotion) {
+                throw new Exception('Không tìm thấy khuyến mãi hoặc không nằm trong thời gian áp dụng');
+            }
+            $promotionApplyCustomer = ($promotion->apply == 1) ? PromotionCustomer::where('promotion_id', $promotion->id)->where('customer_id', $customer_id)->first() : true;
+            dd($promotionApplyCustomer);
+
+            if (!$promotionApplyCustomer) {
+                throw new Exception('Khuyến mãi không áp dụng cho khách hàng');
+            }
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return false;
+        }
     }
 }
