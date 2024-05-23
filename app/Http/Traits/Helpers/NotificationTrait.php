@@ -13,8 +13,10 @@ namespace App\Http\Traits\Helpers;
 use App\Jobs\SendAutomaticNotification;
 use App\Models\Customer;
 use App\Models\Notification;
+use App\Models\NotificationDelivery;
 use App\Models\NotificationTemplate;
 use App\Models\User;
+use Exception;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -82,9 +84,73 @@ trait NotificationTrait
 
         return $save;
     }
+
+    function sendUserNotification($receiver = 'admin', $title, $content)
+    {
+        DB::beginTransaction();
+        try {
+            $receiverIds = [];
+            $notification = new Notification([
+                'title' => $data['title'] ?? '',
+                'content' => $data['content'] ?? '',
+                'image' => '',
+                'is_manual' => true
+            ]);
+            if (!$notification->save()) {
+                throw new Exception('Có lỗi khi tạo thông báo');
+            }
+            $notificationDeliveryList = [];
+            $shouldSendNotificationCustomer = [];
+
+            if (!is_array($receiver) && is_string($receiver) && ($receiver == 'admin')) {
+                $admins = User::where('is_admin', 1)->get();
+                $receiverIds = data_get($admins, '*.id');
+            }
+            if (is_array($receiver)) {
+                $receiverIds = $receiver;
+            }
+            foreach ($receiverIds as $userId) {
+                $user = User::where('id', $userId)->first();
+                $shouldSendNotificationCustomer[] = $user->device_token ?? '';
+                $notificationDeliveryList[] = [
+                    'receiver_id' => $userId,
+                    'user_type' => 0,
+                    'notification_id' => $notification->id ?? 0,
+                    'delivery_time' => $data['delivery_time'] ?? now(),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+            }
+
+            $deliveryNotification = NotificationDelivery::insert($notificationDeliveryList);
+            if (!$deliveryNotification) {
+                throw new Exception('Lỗi khi gửi cho từng khách hàng');
+            }
+            DB::commit();
+
+            foreach ($shouldSendNotificationCustomer as $receiverToken) {
+                SendAutomaticNotification::dispatch($receiverToken, $notification->title ?? '', $notification->content ?? '');
+                // $this->sendFirebaseNotification($receiverToken, $notification->title ?? '', $notification->content ?? '');
+            }
+
+            return $this->success([], 'Gửi thông báo thành công!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error($e);
+            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+        }
+    }
+
     function seenNotification($id)
     {
-        $seen = Notification::where('id', $id)->update(['seen' => 1]);
+        $seen = NotificationDelivery::where('id', $id)->update(['seen' => 1]);
+        return $seen;
+    }
+
+    function seenAllNotification($user)
+    {
+        $type = $user->tokenCan('customer') ? 1 : 0;
+        $seen = NotificationDelivery::where('user_type', $type)->where('receiver_id', $user->id)->where('seen', 0)->update(['seen' => 1]);
         return $seen;
     }
 
@@ -93,34 +159,14 @@ trait NotificationTrait
         $notification = Notification::where('id', $id)->where('receiver_id', request()->user()?->id)->delete();
         return $notification;
     }
-    function deleteNotificationStrategy($id)
+
+    function deleteAllNotification($id)
     {
-        $notification = NotificationTemplate::find($id);
-        if (!$notification) {
-            return false;
-        }
-        DB::beginTransaction();
-        if (Notification::where('template_id', $id)->delete() &&  $notification->delete()) {
-            DB::commit();
-            return true;
-        }
-        DB::rollback();
-        return false;
+        $notification = Notification::where('id', $id)->where('receiver_id', request()->user()?->id)->delete();
+        return $notification;
     }
-    function generateTemplate($title = '', $content = '', $image = '', $isManual)
-    {
-        if (!empty($content)) {
-            $notification = new NotificationTemplate([
-                'is_manual' => $isManual,
-                'title' => $title,
-                'content' => $content,
-                'image' => ''
-            ]);
-            $notification->save();
-            return $notification->id;
-        }
-        return false;
-    }
+
+
     function sendFirebaseNotification($token, $title = 'Đăng Khoa', $content = '')
     {
         try {
@@ -136,7 +182,7 @@ trait NotificationTrait
                     ],
                     'data' => [
                         'story_id' => 'notification',
-                    ],
+                    ]
                 ],
             ];
 

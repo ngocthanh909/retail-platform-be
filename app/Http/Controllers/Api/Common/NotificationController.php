@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Http\Traits\Helpers\NotificationTrait;
 use App\Models\Notification;
+use App\Models\NotificationDelivery;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use App\Models\NotificationTemplate;
@@ -17,23 +18,19 @@ class NotificationController extends Controller
     function getList(Request $request)
     {
         try {
-            DB::enableQueryLog();
             $user = $request->user();
             $now = now()->format('Y-m-d H:i:s');
-            $notifications = DB::table('notifications AS n')
-                ->select('n.id', 'nt.title', 'nt.content', 'nt.image', 'n.seen', 'n.receiver_id', 'n.user_type', 'n.delivery_time')
-                ->join('notification_template AS nt', function ($join) use ($user) {
+            $notifications = DB::table('notification_delivery AS nd')
+                ->join('notifications AS n', function ($join) use ($user) {
                     $join
-                        ->on('n.template_id', '=', 'nt.id');
+                        ->on('nd.notification_id', '=', 'n.id');
                 })
-                ->where(function($query) use ($user){
-                    $query->where('n.receiver_id', $user->id)->orWhere('n.receiver_id', 0);
-                })
-                ->where('n.delivery_time', '<', now())
-                ->where('n.user_type', '=', $user->tokenCan('customer') ? 1 : 0)
-                ->orderBy('n.delivery_time', 'DESC')
+                ->where('nd.receiver_id', $user->id)
+                ->where('nd.user_type', '=', $user->tokenCan('customer') ? 1 : 0)
+                ->where('nd.delivery_time', '<=', now())
+                ->orderBy('nd.delivery_time', 'DESC')
+                ->select('nd.id', 'n.title', 'n.content', 'n.image', 'nd.seen', 'nd.receiver_id', 'nd.user_type', 'nd.delivery_time')
                 ->paginate(config('paginate.notification'));
-            // dd(DB::getRawQueryLog());
             return $this->success($notifications);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -43,8 +40,10 @@ class NotificationController extends Controller
     function seenAction(Request $request)
     {
         try {
-            $action = $this->seenNotification($request->id);
-            return $this->success();
+            $user = $request->user();
+            $type = $user->tokenCan('customer') ? 1 : 0;
+            $action = NotificationDelivery::where('user_type', $type)->where('receiver_id', $user->id)->where('id', $request->id)->where('seen', 0)->update(['seen' => 1]);
+            return $action ? $this->success() : $this->failure();
         } catch (\Throwable $e) {
             Log::error($e);
             return $this->failure('Thao tác thất bại', $e->getMessage());
@@ -53,11 +52,10 @@ class NotificationController extends Controller
     function seenAllAction(Request $request)
     {
         try {
-            $delete = Notification::where('receiver_id', $request->user()->id)->where('user_type', $request->user()->tokenCan('employee') ? 0 : 1)->update(['seen' => 1]);
-            if (!$delete) {
-                throw new \Exception('Thao tác thất bại');
-            }
-            return $this->success();
+            $user = $request->user();
+            $type = $user->tokenCan('customer') ? 1 : 0;
+            $action = NotificationDelivery::where('user_type', $type)->where('receiver_id', $user->id)->where('seen', 0)->update(['seen' => 1]);
+            return $action ? $this->success() : $this->failure();
         } catch (\Throwable $e) {
             Log::error($e);
             return $this->failure('Chuyển trạng thái thông báo thất bại', $e->getMessage());
@@ -66,8 +64,23 @@ class NotificationController extends Controller
     function deleteAction(Request $request)
     {
         try {
-            $this->deleteNotification($request->id);
-            return $this->success();
+            $user = $request->user();
+            $userType = $request->user()->tokenCan('customer') ? 1 : 0;
+            $action = NotificationDelivery::where('receiver_id')->where('user_type', $userType)->where('id', $request->id)->delete();
+            return $action ? $this->success() : $this->failure();
+        } catch (\Throwable $e) {
+            Log::error($e);
+            return $this->failure('Thao tác thất bại', $e->getMessage());
+        }
+    }
+
+    function deleteAllAction(Request $request)
+    {
+        try {
+            $user = $request->user();
+            $userType = $user->tokenCan('customer') ? 1 : 0;
+            $action = NotificationDelivery::where('receiver_id', $user->id)->where('user_type', $userType)->delete();
+            return $action ? $this->success() : $this->failure();
         } catch (\Throwable $e) {
             Log::error($e);
             return $this->failure('Thao tác thất bại', $e->getMessage());

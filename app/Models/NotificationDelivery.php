@@ -7,9 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Support\Facades\Storage;
 
-class NotificationTemplate extends Model
+class NotificationDelivery extends Model
 {
     use HasFactory;
-    protected $table = 'notification_template';
+    protected $table = 'notification_delivery';
     protected $guarded = [];
 }
