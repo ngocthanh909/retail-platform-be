@@ -80,7 +80,7 @@ class OrderController extends Controller
 
             $order = new Order([
                 'customer_id' => $customer->id ?? 0,
-                'responsible_staff' => $customer->responsible_staff ?? 0,
+                'responsible_staff' => $customer?->responsible_staff ?? 0,
                 'creator_id' => ($user->tokenCan('admin') || $user->tokenCan('employee')) ? $user->id : 0,
                 'customer_name' => $customer->customer_name ?? ($request->customer_name ?? ''),
                 'phone' => $customer->phone ?? ($request->customer_phone ?? ''),
@@ -174,7 +174,7 @@ class OrderController extends Controller
 
             $order->fill([
                 'customer_id' => $customer->id,
-                'responsible_staff' => $customer->responsible_staff,
+                'responsible_staff' => $customer?->responsible_staff,
                 'customer_name' => $customer->customer_name,
                 'phone' => $customer->phone,
                 'province' => $customer->province,
