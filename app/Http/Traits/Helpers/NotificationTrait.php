@@ -25,93 +25,33 @@ use Kedniko\FCM\FCM;
 
 trait NotificationTrait
 {
-    function sendNotification(mixed $id, $userType = 0, $sendTime = null, $isManual = false, string $title = '', string $content = '', $image = '', $sendNow = true)
-    {
-        $templateId = $this->generateTemplate($title, $content, $image, $isManual);
-        if (is_array($id)) {
-            foreach ($id as $receiverId) {
-                $notification = new Notification([
-                    'template_id' => $templateId,
-                    'receiver_id' => $receiverId ?? 0,
-                    'delivery_time' => $sendTime,
-                    'user_type' => $userType,
-                    'seen' => 0,
-                    'sent' => $sendNow
-                ]);
-                $notification->save();
-
-                if ($sendNow) {
-                    if ($userType == 0) {
-                        $user = User::find($receiverId);
-                    } else {
-                        $user = Customer::find($receiverId);
-                    }
-                    if ($user && $user->device_token) {
-                        SendAutomaticNotification::dispatch($user->device_token, $title, $content);
-                    }
-                }
-            }
-        } else {
-            $notification = new Notification([
-                'template_id' => $templateId,
-                'receiver_id' => $id,
-                'delivery_time' => $sendTime,
-                'user_type' => $userType,
-                'seen' => 0,
-                'sent' => $sendNow
-            ]);
-            $notification->save();
-            if ($sendNow) {
-                if ($userType == 0) {
-                    $user = User::find($id);
-                } else {
-                    $user = Customer::find($id);
-                }
-                if ($user && $user->device_token) {
-                    SendAutomaticNotification::dispatch($user->device_token, $title, $content);
-                }
-            }
-        }
-
-        $save = $notification->save();
-        $user = null;
-
-        // try {
-
-        // } catch(\Throwable $e){
-        //     dd($e);
-        // }
-
-        return $save;
-    }
-
     function sendUserNotification($receiver = 'admin', $title, $content)
     {
         DB::beginTransaction();
         try {
             $receiverIds = [];
             $notification = new Notification([
-                'title' => $data['title'] ?? '',
-                'content' => $data['content'] ?? '',
+                'title' => $title,
+                'content' => $content,
                 'image' => '',
-                'is_manual' => true
+                'is_manual' => false
             ]);
             if (!$notification->save()) {
                 throw new Exception('Có lỗi khi tạo thông báo');
             }
             $notificationDeliveryList = [];
-            $shouldSendNotificationCustomer = [];
+            $shouldSendNotificationTokens = [];
 
             if (!is_array($receiver) && is_string($receiver) && ($receiver == 'admin')) {
                 $admins = User::where('is_admin', 1)->get();
                 $receiverIds = data_get($admins, '*.id');
             }
             if (is_array($receiver)) {
-                $receiverIds = $receiver;
+                $receiverIds = [$receiver];
             }
             foreach ($receiverIds as $userId) {
                 $user = User::where('id', $userId)->first();
-                $shouldSendNotificationCustomer[] = $user->device_token ?? '';
+                $shouldSendNotificationTokens[] = $user->device_token ?? '';
                 $notificationDeliveryList[] = [
                     'receiver_id' => $userId,
                     'user_type' => 0,
@@ -124,14 +64,51 @@ trait NotificationTrait
 
             $deliveryNotification = NotificationDelivery::insert($notificationDeliveryList);
             if (!$deliveryNotification) {
-                throw new Exception('Lỗi khi gửi cho từng khách hàng');
+                throw new Exception('Lỗi khi gửi cho quản trị viên');
             }
             DB::commit();
 
-            foreach ($shouldSendNotificationCustomer as $receiverToken) {
+            foreach ($shouldSendNotificationTokens as $receiverToken) {
                 SendAutomaticNotification::dispatch($receiverToken, $notification->title ?? '', $notification->content ?? '');
-                // $this->sendFirebaseNotification($receiverToken, $notification->title ?? '', $notification->content ?? '');
             }
+
+            return $this->success([], 'Gửi thông báo thành công!');
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error($e);
+            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+        }
+    }
+    function sendCustomerNotification($receiver, $title, $content)
+    {
+        DB::beginTransaction();
+        try {
+            $notification = new Notification([
+                'title' => $title,
+                'content' => $content,
+                'image' => '',
+                'is_manual' => false
+            ]);
+            if (!$notification->save()) {
+                throw new Exception('Có lỗi khi tạo thông báo');
+            }
+            $user = User::findOrFail($receiver);
+
+            $notificationDelivery = [
+                'receiver_id' => $receiver,
+                'user_type' => 0,
+                'notification_id' => $notification->id ?? 0,
+                'delivery_time' => $data['delivery_time'] ?? now(),
+                'created_at' => now(),
+                'updated_at' => now()
+            ];
+
+            $deliveryNotification = NotificationDelivery::insert($notificationDelivery);
+            if (!$deliveryNotification) {
+                throw new Exception('Lỗi khi gửi TB cho khách');
+            }
+            DB::commit();
+            SendAutomaticNotification::dispatch($user->device_token, $notification->title ?? '', $notification->content ?? '');
 
             return $this->success([], 'Gửi thông báo thành công!');
         } catch (\Throwable $e) {

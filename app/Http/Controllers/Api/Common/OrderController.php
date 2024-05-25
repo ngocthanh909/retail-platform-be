@@ -29,6 +29,18 @@ class OrderController extends Controller
 {
     use ApiResponseTrait, NotificationTrait;
 
+    private $operator = '';
+
+    public function __construct()
+    {
+        $user = auth('sanctum')->user();
+        if ($user->tokenCan('customer')) {
+            $this->operator = 'customer';
+        } else {
+            $this->operator = $user->tokenCan('admin') ? 'admin' : 'employee';
+        }
+    }
+
     public function detail(Request $request, $id)
     {
         try {
@@ -65,7 +77,6 @@ class OrderController extends Controller
 
             $customer = Customer::find($request->customer_id);
             $responseData = $this->calculate($data, $user);
-
 
             $order = new Order([
                 'customer_id' => $customer->id ?? 0,
@@ -119,30 +130,28 @@ class OrderController extends Controller
             DB::commit();
             $order->total_commission = $orderCommission;
             $order->save();
-            $order = $order->load('details');
-            $this->sendNotification(
-                $user->id,
-                1,
-                now()->format('Y-m-d H:i:s'),
-                false,
-                'Tạo đơn hàng thành công',
-                'Bạn đã tạo đơn hàng thành công. Mã đơn hàng của bạn là ' . $order->displayId,
-                ''
-            );
-            $adminReceiver = [1];
+            $order = $order->load(['details', 'staff']);
+            $staffName = $order->staff?->name;
+            $orderId = $order->displayId;
+            $customerName = $order->customer_name;
 
-            if ($customer->responsible_staff) {
-                $adminReceiver[] = $customer->responsible_staff;
+            switch ($this->operator) {
+                case 'admin':
+                    $this->sendUserNotification('admin', 'Tạo đơn hàng thành công', "Bạn đã tạo thành công đơn hàng $orderId cho cửa hàng $customerName");
+                    $this->sendUserNotification($customer->responsible_staff, 'Đơn hàng mới từ Admin', "Admin đã tạo đơn hàng mới cho cửa hàng $customerName do bạn phụ trách. Mã đơn hàng là $orderId");
+                    $this->sendCustomerNotification($customer->id, 'Đơn hàng mới từ khách hàng', "Khách hàng $customerName đã tạo đơn hàng mới, mã đơn hàng $orderId");
+                    break;
+                case 'employee':
+                    $this->sendUserNotification('admin', "Đơn hàng mới từ $staffName",  "$staffName đã tạo đơn hàng cho cửa hàng $customerName. Mã đơn hàng là $orderId");
+                    $this->sendUserNotification($customer->responsible_staff, "Tạo đơn hàng thành công", "Bạn đã tạo thành công đơn hàng $orderId cho cửa hàng $customerName");
+                    $this->sendCustomerNotification($customer->id, "Đơn hàng mới từ khách hàng", "Khách hàng $customerName đã tạo đơn hàng mới, mã đơn hàng $orderId");
+                    break;
+                case 'customer':
+                    $this->sendCustomerNotification($customer->id, 'Tạo đơn hàng mới thành công', "Bạn đã tạo thành công đơn hàng mới, mã đơn hàng $orderId");
+                    $this->sendUserNotification('admin', "Đơn hàng mới từ khách hàng",  "$customerName đã tạo thành công đơn hàng $orderId");
+                    $this->sendUserNotification($customer->responsible_staff, "Đơn hàng mới từ khách hàng",  "$customerName đã tạo thành công đơn hàng $orderId");
+                    break;
             }
-            $this->sendNotification(
-                $adminReceiver,
-                0,
-                now()->format('Y-m-d H:i:s'),
-                false,
-                'Bạn có đơn hàng mới',
-                'Khách hàng ' . $user->customer_name . ' vừa đặt thành công đơn hàng ' . $order->displayId,
-                ''
-            );
             return $this->success($order);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -214,27 +223,25 @@ class OrderController extends Controller
             $order->save();
             DB::commit();
             $order = $order->load('details');
-            $this->sendNotification(
-                $customer->id,
-                1,
-                now()->format('Y-m-d H:i:s'),
-                false,
-                'Sửa đơn hàng',
-                'Bạn đã sửa đơn hàng ' . $order->displayId . ' thành công',
-                ''
-            );
-            if ($customer->responsible_staff) {
-                $adminReceiver[] = $customer->responsible_staff;
+            $order = $order->load(['details', 'staff']);
+
+            $staffName = $order->staff?->name;
+            $orderId = $order->displayId;
+            $customerName = $order->customer_name;
+
+            switch ($this->operator) {
+                case 'admin':
+                    $this->sendUserNotification('admin', 'Sửa đơn hàng thành công', "Bạn đã sửa thành công đơn hàng $orderId cho cửa hàng $customerName");
+                    $this->sendUserNotification($customer->responsible_staff, 'Đơn hàng được cập bởi Admin', "Admin đã sửa đơn hàng mới cho cửa hàng $customerName do bạn phụ trách. Mã đơn hàng là $orderId");
+                    $this->sendCustomerNotification($customer->id, 'Cập nhật đơn hàng', "Admin đã sửa đơn hàng $orderId của bạn");
+                    break;
+                case 'employee':
+                    $this->sendUserNotification('admin', "Đơn hàng được cập bởi $staffName",  "$staffName đã sửa đơn hàng cho cửa hàng $customerName. Mã đơn hàng là $orderId");
+                    $this->sendUserNotification($customer->responsible_staff, "Sửa đơn hàng thành công", "Bạn đã sửa thành công đơn hàng $orderId cho cửa hàng $customerName");
+                    $this->sendCustomerNotification($customer->id, "Cập nhật đơn hàng", "Admin đã sửa đơn hàng $orderId của bạn");
+                    break;
             }
-            $this->sendNotification(
-                $adminReceiver,
-                0,
-                now()->format('Y-m-d H:i:s'),
-                false,
-                'Sửa',
-                'Đơn của ' . $order->displayId . ' khách hàng ' . $user->customer_name . ' vừa được chỉnh sửa ',
-                ''
-            );
+
 
             return $this->success($order);
         } catch (\Throwable $e) {
@@ -264,44 +271,34 @@ class OrderController extends Controller
             $messageUser = '';
             $messageAdmin = '';
             $title = '';
-            if ($request->status == 2) {
-                $title = 'Xác nhận đơn hàng';
-                $messageUser = 'Đơn hàng ' . $order->displayId .  ' của bạn đã được xác nhận';
-                $messageAdmin = 'Đơn hàng ' . $order->displayId . ' đã được xác nhận bởi ' . $user->name;
-            }
-            if ($request->status == 3) {
-                $title = 'Hoàn thành đơn hàng';
-                $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã hoàn thành';
-                $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . $user->name;
-            }
-            if ($request->status == 0) {
-                $title = 'Hủy nhận đơn hàng';
-                $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên phụ trách.';
-                $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . $user->name;
-            }
-
-            $this->sendNotification(
-                $customer->id ?? '',
-                1,
-                now()->format('Y-m-d H:i:s'),
-                false,
-                $title,
-                $messageUser,
-                ''
-            );
-            $adminReceiver = [1];
-            if ($customer->responsible_staff) {
-                $adminReceiver[] = $customer->responsible_staff;
-            }
-            $this->sendNotification(
-                $adminReceiver,
-                0,
-                now()->format('Y-m-d H:i:s'),
-                false,
-                $title,
-                $messageAdmin,
-                ''
-            );
+            // if ($request->status == 2) {
+            // $title = 'Xác nhận đơn hàng';
+            // $messageUser = 'Đơn hàng ' . $order->displayId .  ' của bạn đã được xác nhận';
+            // $messageAdmin = 'Đơn hàng ' . $order->displayId . ' đã được xác nhận bởi ' . $user->name;
+            // }
+            // if ($request->status == 3) {
+            // $title = 'Hoàn thành đơn hàng';
+            // $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã hoàn thành';
+            // $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã hoàn thành bởi ' . $user->name;
+            // }
+            // if ($request->status == 0) {
+            //     // $title = 'Hủy nhận đơn hàng';
+            //     // $messageUser = 'Đơn hàng ' . $order->displayId . ' của bạn đã bị hủy bởi nhân viên phụ trách.';
+            //     // $messageAdmin = 'Đơn hàng ' . $order->displayId . 'đã bị hủy bởi ' . $user->name;
+            // }
+            // $adminReceiver = [1];
+            // if ($customer->responsible_staff) {
+            //     $adminReceiver[] = $customer->responsible_staff;
+            // }
+            // $this->sendNotification(
+            //     $adminReceiver,
+            //     0,
+            //     now()->format('Y-m-d H:i:s'),
+            //     false,
+            //     $title,
+            //     $messageAdmin,
+            //     ''
+            // );
 
             return $this->success([], 'Đơn hàng đã sửa trạng thái thành công');
         } catch (\Throwable $e) {
