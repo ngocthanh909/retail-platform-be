@@ -42,13 +42,14 @@ trait NotificationTrait
             $notificationDeliveryList = [];
             $shouldSendNotificationTokens = [];
 
-            if (!is_array($receiver) && is_string($receiver) && ($receiver == 'admin')) {
+            if (!is_array($receiver) && ($receiver == 'admin')) {
                 $admins = User::where('is_admin', 1)->get();
                 $receiverIds = data_get($admins, '*.id');
             }
-            if (is_array($receiver)) {
+            if (!is_array($receiver) && ($receiver !== 'admin')) {
                 $receiverIds = [$receiver];
             }
+
             foreach ($receiverIds as $userId) {
                 $user = User::where('id', $userId)->first();
                 $shouldSendNotificationTokens[] = $user->device_token ?? '';
@@ -89,14 +90,15 @@ trait NotificationTrait
                 'image' => '',
                 'is_manual' => false
             ]);
+
             if (!$notification->save()) {
                 throw new Exception('Có lỗi khi tạo thông báo');
             }
-            $user = User::findOrFail($receiver);
+            $customer = Customer::findOrFail($receiver);
 
             $notificationDelivery = [
                 'receiver_id' => $receiver,
-                'user_type' => 0,
+                'user_type' => 1,
                 'notification_id' => $notification->id ?? 0,
                 'delivery_time' => $data['delivery_time'] ?? now(),
                 'created_at' => now(),
@@ -108,7 +110,7 @@ trait NotificationTrait
                 throw new Exception('Lỗi khi gửi TB cho khách');
             }
             DB::commit();
-            SendAutomaticNotification::dispatch($user->device_token, $notification->title ?? '', $notification->content ?? '');
+            SendAutomaticNotification::dispatch($customer->device_token, $notification->title ?? '', $notification->content ?? '');
 
             return $this->success([], 'Gửi thông báo thành công!');
         } catch (\Throwable $e) {
