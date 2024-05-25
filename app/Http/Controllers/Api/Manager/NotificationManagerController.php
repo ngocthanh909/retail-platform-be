@@ -4,14 +4,18 @@ namespace App\Http\Controllers\Api\Manager;
 
 use App\Console\Commands\SendAutoNotification;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\NotificationCampaignRequest;
 use App\Http\Traits\Helpers\ApiResponseTrait;
 use App\Http\Traits\Helpers\NotificationTrait;
 use App\Jobs\SendAutomaticNotification;
 use App\Models\Customer;
 use App\Models\Notification;
+use App\Models\NotificationCampaign;
 use App\Models\NotificationDelivery;
 use App\Models\NotificationTemplate;
+use Carbon\Carbon;
 use Exception;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,60 +24,55 @@ class NotificationManagerController extends Controller
 {
     use ApiResponseTrait, NotificationTrait;
 
-    function create(Request $request)
+    function create(NotificationCampaignRequest $request)
     {
         DB::beginTransaction();
         try {
-            $data = $request->all();
-            $notification = new Notification([
+            $data = $request->validated();
+            $campaign = new NotificationCampaign([
                 'title' => $data['title'] ?? '',
                 'content' => $data['content'] ?? '',
                 'image' => '',
-                'is_manual' => true
+                'receiver_id' => $data['receiver_id'] ?? 0,
+                'delivery_date' => $data['delivery_date'] ?? '2024-01-01',
+                'delivery_time' => $data['delivery_time'] ?? '00:00:00',
+                'repeat' => $data['repeat'] ?? '',
+                'next_repeat' => null
             ]);
-            if (!$notification->save()) {
-                throw new Exception('Có lỗi khi tạo thông báo');
-            }
-            $notificationDeliveryList = [];
-            $shouldSendNotificationCustomer = [];
-            if ($data['receiver_id'] == 0) {
-                $customers = Customer::where('status', 1)->get();
-                foreach ($customers as $customer) {
-                    $shouldSendNotificationCustomer[] = $customer->device_token ?? '';
-                    $notificationDeliveryList[] = [
-                        'receiver_id' => $customer->id,
-                        'user_type' => 1,
-                        'notification_id' => $notification->id ?? 0,
-                        'delivery_time' => $data['delivery_time'] ?? now(),
-                        'created_at' => now(),
-                        'updated_at' => now()
-                    ];
-                }
-            } else {
-                $customer = Customer::find($data['receiver_id']);
-                $shouldSendNotificationCustomer[] = $customer->device_token ?? '';
-                $notificationDeliveryList[] = [
-                    'receiver_id' => $data['receiver_id'],
-                    'user_type' => 1,
-                    'notification_id' => $notification->id ?? 0,
-                    'delivery_time' => $data['delivery_time'] ?? now(),
-                    'created_at' => now(),
-                    'updated_at' => now()
+            if ($data['repeat'] ?? '') {
+                $weekMap = [
+                    0 => 'SU',
+                    1 => 'MO',
+                    2 => 'TU',
+                    3 => 'WE',
+                    4 => 'TH',
+                    5 => 'FR',
+                    6 => 'SA',
                 ];
-            };
-            $deliveryNotification = NotificationDelivery::insert($notificationDeliveryList);
-            if (!$deliveryNotification) {
-                throw new Exception('Lỗi khi gửi cho từng khách hàng');
+                switch ($data['repeat']) {
+                    case 'now':
+                        $this->sendCustomerNotification($data['receiver_id'], $data['title'], $data['content']);
+                        break;
+                    case str_starts_with($data['repeat'], 'weekly'):
+                        $dayInWeek = explode(':', $data['repeat']);
+                        $dayInWeek = count($dayInWeek) > 1 ? $dayInWeek[1] : null;
+                        $campaign->next_repeat = now()->setDay(1);
+                        break;
+                    case 'everyday':
+                        $time = Carbon::make($campaign->delivery_time);
+                        $campaign->next_repeat = $time->isPast() ? $time->addDay() : $time;
+                        break;
+                    default:
+                        $campaign->next_repeat = Carbon::make($data['delivery_date'] . " " . $data['delivery_time']);
+                        break;
+                }
+            }
+            $action = $campaign->save();
+            if (!$action) {
+                throw new Exception('Lưu thông báo thất bại');
             }
             DB::commit();
-
-            if (!$data['delivery_time']) {
-                foreach ($shouldSendNotificationCustomer as $receiverToken) {
-                    SendAutomaticNotification::dispatch($receiverToken, $notification->title ?? '', $notification->content ?? '');
-                    $this->sendFirebaseNotification($receiverToken, $notification->title ?? '', $notification->content ?? '');
-                }
-            }
-            return $this->success([], 'Gửi thông báo thành công!');
+            return $this->success($campaign, 'Gửi thông báo thành công!');
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error($e);
@@ -81,34 +80,73 @@ class NotificationManagerController extends Controller
         }
     }
 
-    function list(Request $request)
+    function edit(NotificationCampaignRequest $request, $id)
     {
+        DB::beginTransaction();
         try {
-            $notifications = Notification::where('is_manual', true)->paginate(config('store_list'));
-            return $this->success($notifications, 'Gửi thông báo thành công!');
+            $data = $request->validated();
+            $campaign = NotificationCampaign::findOrFail($id);
+            $campaign->fill([
+                'title' => $data['title'] ?? '',
+                'content' => $data['content'] ?? '',
+                'image' => '',
+                'receiver_id' => $data['receiver_id'] ?? 0,
+                'delivery_date' => $data['delivery_date'] ?? '2024-01-01',
+                'delivery_time' => $data['delivery_time'] ?? '00:00:00',
+                'repeat' => $data['repeat'] ?? '',
+                'next_repeat' => null
+            ]);
+            if ($data['repeat'] ?? '') {
+                $weekMap = [
+                    0 => 'SU',
+                    1 => 'MO',
+                    2 => 'TU',
+                    3 => 'WE',
+                    4 => 'TH',
+                    5 => 'FR',
+                    6 => 'SA',
+                ];
+                switch ($data['repeat']) {
+                    case 'now':
+                        $this->sendCustomerNotification($data['receiver_id'], $data['title'], $data['content']);
+                        break;
+                    case str_starts_with($data['repeat'], 'weekly'):
+                        $dayInWeek = explode(':', $data['repeat']);
+                        $dayInWeek = count($dayInWeek) > 1 ? $dayInWeek[1] : null;
+                        $campaign->next_repeat = now()->setDay((int)$dayInWeek);
+                        break;
+                    case 'everyday':
+                        $time = Carbon::make($campaign->delivery_time);
+                        $campaign->next_repeat = $time->isPast() ? $time->addDay() : $time;
+                        break;
+                    default:
+                        $campaign->next_repeat = Carbon::make($data['delivery_date'] . " " . $data['delivery_time']);
+                        break;
+                }
+            }
+            $action = $campaign->save();
+            if (!$action) {
+                throw new Exception('Sửa thông báo thất bại');
+            }
+            DB::commit();
+            return $this->success($campaign, 'Sửa thông báo thành công!');
         } catch (\Throwable $e) {
+            DB::rollBack();
             Log::error($e);
-            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+            if ($e instanceof ModelNotFoundException) {
+                return $this->failure('Sửa thông báo thất bại', 'Không tìm thấy thông báo');
+            }
+            return $this->failure('Sửa thông báo thất bại', $e->getMessage());
         }
     }
 
-    function edit(Request $request)
+
+
+    function list(Request $request)
     {
         try {
-            $sendNotifi = $this->sendNotification(
-                $request->ids,
-                1,
-                $request->delivery_time,
-                false,
-                $request->title ?? '',
-                $request->content ?? '',
-                '',
-                false
-            );
-            if (!$sendNotifi) {
-                return $this->failure('Gửi thông báo thành không thành công!');
-            }
-            return $this->success([], 'Gửi thông báo thành công!');
+            $notifications = NotificationCampaign::where('status', 1)::paginate(config('store_list'));
+            return $this->success($notifications, 'Gửi thông báo thành công!');
         } catch (\Throwable $e) {
             Log::error($e);
             return $this->failure('Gửi thông báo thất bại', $e->getMessage());
@@ -129,10 +167,10 @@ class NotificationManagerController extends Controller
         }
     }
 
-    function delete(Request $request)
+    function delete(Request $request, $id)
     {
         try {
-            $deleteNotifi = $this->deleteNotificationStrategy($request->id);
+            $deleteNotifi = NotificationCampaign::where('id', $id)->delete();
             if (!$deleteNotifi) {
                 return $this->failure('Xóa thông báo không thành công!');
             }

@@ -94,23 +94,31 @@ trait NotificationTrait
             if (!$notification->save()) {
                 throw new Exception('Có lỗi khi tạo thông báo');
             }
-            $customer = Customer::findOrFail($receiver);
+            $receiverIds = [$receiver];
+            if ($receiver == 0) {
+                $receiverIds = data_get(Customer::where('status', 1)->get(), '*.id');
+            }
 
-            $notificationDelivery = [
-                'receiver_id' => $receiver,
-                'user_type' => 1,
-                'notification_id' => $notification->id ?? 0,
-                'delivery_time' => $data['delivery_time'] ?? now(),
-                'created_at' => now(),
-                'updated_at' => now()
-            ];
+            foreach ($receiverIds as $receiver) {
+                $customer = Customer::findOrFail($receiver);
 
-            $deliveryNotification = NotificationDelivery::insert($notificationDelivery);
-            if (!$deliveryNotification) {
-                throw new Exception('Lỗi khi gửi TB cho khách');
+                $notificationDelivery = [
+                    'receiver_id' => $receiver,
+                    'user_type' => 1,
+                    'notification_id' => $notification->id ?? 0,
+                    'delivery_time' => $data['delivery_time'] ?? now(),
+                    'created_at' => now(),
+                    'updated_at' => now()
+                ];
+
+                $deliveryNotification = NotificationDelivery::insert($notificationDelivery);
+                SendAutomaticNotification::dispatch($customer->device_token, $notification->title ?? '', $notification->content ?? '');
+                if (!$deliveryNotification) {
+                    throw new Exception('Lỗi khi gửi TB cho khách');
+                }
             }
             DB::commit();
-            SendAutomaticNotification::dispatch($customer->device_token, $notification->title ?? '', $notification->content ?? '');
+
 
             return $this->success([], 'Gửi thông báo thành công!');
         } catch (\Throwable $e) {

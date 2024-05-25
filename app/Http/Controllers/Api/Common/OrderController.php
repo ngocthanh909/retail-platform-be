@@ -302,7 +302,6 @@ class OrderController extends Controller
                 $this->sendCustomerNotification($customer->id, $title, $message);
             }
 
-
             return $this->success([], 'Đơn hàng đã sửa trạng thái thành công');
         } catch (\Throwable $e) {
             DB::rollback();
