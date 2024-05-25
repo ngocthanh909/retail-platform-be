@@ -70,7 +70,7 @@ class AccountController extends Controller
             $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
 
 
-            if($file){
+            if ($file) {
                 $fileName = $file->storePubliclyAs(
                     'images/users',
                     Str::slug($data['phone']) . '.' . $file->extension(),
@@ -82,7 +82,7 @@ class AccountController extends Controller
                 return $this->success("Tạo tài khoản thành công!");
             };
             return $this->failure("Tạo tài khoản thất bại");
-        } catch(\Throwable $e){
+        } catch (\Throwable $e) {
             return $this->failure('', $e->getMessage());
         }
     }
@@ -102,14 +102,14 @@ class AccountController extends Controller
                 "address" => $data['address'] ?? ''
             ]);
 
-            if(!empty($data['password'])){
+            if (!empty($data['password'])) {
                 $user->password = Hash::make($data['password']);
             }
 
             $file = $request->hasFile('avatar') ? $request->file('avatar') : null;
             $fileName = '';
 
-            if($file){
+            if ($file) {
                 $fileName = $file->storePubliclyAs(
                     'images/users',
                     Str::slug($data['phone']) . '.' . $file->extension(),
@@ -121,8 +121,8 @@ class AccountController extends Controller
                 return $this->success($user, "Sửa tài khoản thành công!");
             };
             return $this->failure("Sửa tài khoản thất bại");
-        } catch(\Throwable $e){
-            if($e instanceof ModelNotFoundException){
+        } catch (\Throwable $e) {
+            if ($e instanceof ModelNotFoundException) {
                 return $this->failure('Không tìm thấy nhân viên này', $e->getMessage());
             }
             return $this->failure('Lỗi khi sửa nhân viên', $e->getMessage());
@@ -133,7 +133,7 @@ class AccountController extends Controller
     {
         try {
             $user = User::findOrFail($id);
-            if($id === 1){
+            if ($id === 1) {
                 throw new Exception("Không thể xóa tài khoản admin");
             }
 
@@ -150,7 +150,8 @@ class AccountController extends Controller
         }
     }
 
-    function listAllEmployee(){
+    function listAllEmployee()
+    {
 
         try {
             return $this->success(User::where('is_admin', 0)->get());
@@ -158,7 +159,5 @@ class AccountController extends Controller
             Log::error($e);
             return $this->failure('Lỗi khi lấy danh sách nhân viên');
         }
-
     }
-
 }

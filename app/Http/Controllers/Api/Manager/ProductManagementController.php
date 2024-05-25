@@ -134,7 +134,7 @@ class ProductManagementController extends Controller
                 'price' => $data['price'],
                 'description' => $data['description'] ?? '',
                 'category_id' => $data['category_id'],
-                'status' => $data['status'] ?? 1,
+                'status' => $data['status'] ?? $product->status,
             ]);
             if (is_object($request->product_image)) {
                 $shouldDeleteFile[] = $product->getRawOriginal('product_image');
@@ -164,7 +164,7 @@ class ProductManagementController extends Controller
             }
 
             $shouldDeleteQueryRs = ProductImage::where('product_id', $id)->whereNotIn('product_image', $fileNameRaw)->get();
-            foreach($shouldDeleteQueryRs as $possibleDeleteFile){
+            foreach ($shouldDeleteQueryRs as $possibleDeleteFile) {
                 $shouldDeleteFile[] = $possibleDeleteFile->product_image_storage_path;
             }
             $deleteOldProductRecord = ProductImage::where('product_id', $id)->delete();

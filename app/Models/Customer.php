@@ -30,6 +30,8 @@ class Customer extends Authenticatable
         'address',
         'province',
         'district',
+        'province_id',
+        'district_id',
         'status',
         'responsible_staff',
         'avatar',
@@ -57,13 +59,14 @@ class Customer extends Authenticatable
         'password' => 'hashed',
     ];
 
-    public function staff(){
+    public function staff()
+    {
         return $this->belongsTo(User::class, 'responsible_staff', 'id');
     }
 
     protected function avatar(): Attribute
     {
-        if($this->getRawOriginal('avatar')){
+        if ($this->getRawOriginal('avatar')) {
             return Attribute::make(
                 get: fn (string $value) => asset(Storage::url($value))
             );

@@ -9,6 +9,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerRequest;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Traits\Helpers\ApiResponseTrait;
+use App\Models\District;
+use App\Models\Province;
 use App\Models\User;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\Log;
@@ -23,8 +25,22 @@ class CustomerManagementController extends Controller
         try {
             $customers = Customer::with('staff');
             $keyword = $request->keyword;
+            $address = $request->address;
+            $province_id = $request->province_id;
+            $district_id = $request->district_id;
+
             if (!empty($keyword)) {
                 $customers = $customers->where('customer_name', 'like', "%$keyword%");
+            }
+
+            if (!empty($address)) {
+                $customers = $customers->where('address', 'like', "%$address%");
+            }
+            if (!empty($province_id)) {
+                $customers = $customers->where('province_id', $province_id);
+            }
+            if (!empty($district_id)) {
+                $customers = $customers->where('district_id', "%$district_id%");
             }
             $customers = $customers->orderBy('created_at', 'DESC')->paginate(config('paginate.store_list'));
             return $this->success($customers);
@@ -39,7 +55,7 @@ class CustomerManagementController extends Controller
         try {
             $customers = new Customer();
             $user = $request->user();
-            if($user->tokenCan('employee') && !$user->tokenCan('admin')){
+            if ($user->tokenCan('employee') && !$user->tokenCan('admin')) {
                 $customers = $customers->where('responsible_staff', $user->id);
             }
             $customers = $customers->get();
@@ -69,12 +85,16 @@ class CustomerManagementController extends Controller
     {
         try {
             $data = $request->validated();
+            $district = District::where('district_code', $data['district_id'] ?? '')->first();
+            $province = Province::where('province_code', $data['province_id'] ?? '')->first();
             $customerData = [
                 'customer_name' => $data['customer_name'],
                 'phone' => $data['phone'],
                 'address' => $data['address'] ?? '',
-                'district' => $data['district'] ?? '',
-                'province' => $data['province'] ?? '',
+                'district' => $district->district_name ?? '',
+                'province' => $province->province_name ?? '',
+                'district_id' => $data['district_id'] ?? 0,
+                'province_id' => $data['province_id'] ?? 0,
                 'responsible_staff' => $data['responsible_staff'] ?? 0,
                 'password' => Hash::make($data["password"] ?? "12345678"),
                 'address' => $data['address'],
@@ -106,13 +126,16 @@ class CustomerManagementController extends Controller
         try {
             $data = $request->validated();
             $customer = Customer::findOrFail($id);
-
+            $district = District::where('district_code', $data['district_id'])->first();
+            $province = Province::where('province_code', $data['province_id'])->first();
             $customerData = [
                 'customer_name' => $data['customer_name'],
                 'phone' => $data['phone'],
                 'address' => $data['address'] ?? '',
-                'district' => $data['district'] ?? '',
-                'province' => $data['province'] ?? '',
+                'district' => $district->district_name ?? '',
+                'province' => $province->province_name ?? '',
+                'district_id' => $data['district_id'] ?? 0,
+                'province_id' => $data['province_id'] ?? 0,
                 'responsible_staff' => $data['responsible_staff'] ?? 1,
                 'address' => $data['address'],
                 'status' => $data['status'] ?? true,

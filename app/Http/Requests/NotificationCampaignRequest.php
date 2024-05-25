@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CustomerProfileEditRequest extends FormRequest
+class NotificationCampaignRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,13 +22,13 @@ class CustomerProfileEditRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'avatar' => ['image' => 'max:2048', 'nullable'],
-            'customer_name' => 'required|string|max:200',
-            'dob' => ['nullable', 'date'],
-            'gender' => 'nullable',
-            'address' => 'required|string|max:100',
-            'district_id' => 'required|numeric',
-            'province_id' => 'required|numeric',
+            'title' => 'required|string|max:300',
+            'content' => 'required|string|max:1000',
+            'image' => ['nullable', 'file' => 'max:2048'],
+            'receiver_id' => 'required',
+            'repeat' => 'string',
+            'delivery_date' => ['nullable', 'date'],
+            'delivery_time' => ['nullable', 'date_format:H:i:s'],
         ];
     }
 }
