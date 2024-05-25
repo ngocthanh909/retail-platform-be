@@ -138,18 +138,18 @@ class OrderController extends Controller
             switch ($this->operator) {
                 case 'admin':
                     $this->sendUserNotification('admin', 'Tạo đơn hàng thành công', "Bạn đã tạo thành công đơn hàng $orderId cho cửa hàng $customerName");
-                    $this->sendUserNotification($customer->responsible_staff, 'Đơn hàng mới từ Admin', "Admin đã tạo đơn hàng mới cho cửa hàng $customerName do bạn phụ trách. Mã đơn hàng là $orderId");
-                    $this->sendCustomerNotification($customer->id, 'Đơn hàng mới từ khách hàng', "Khách hàng $customerName đã tạo đơn hàng mới, mã đơn hàng $orderId");
+                    $this->sendUserNotification($customer?->responsible_staff ?? '', 'Đơn hàng mới từ Admin', "Admin đã tạo đơn hàng mới cho cửa hàng $customerName do bạn phụ trách. Mã đơn hàng là $orderId");
+                    $this->sendCustomerNotification($customer?->id ?? '', 'Đơn hàng mới từ khách hàng', "Khách hàng $customerName đã tạo đơn hàng mới, mã đơn hàng $orderId");
                     break;
                 case 'employee':
                     $this->sendUserNotification('admin', "Đơn hàng mới từ $staffName",  "$staffName đã tạo đơn hàng cho cửa hàng $customerName. Mã đơn hàng là $orderId");
-                    $this->sendUserNotification($customer->responsible_staff, "Tạo đơn hàng thành công", "Bạn đã tạo thành công đơn hàng $orderId cho cửa hàng $customerName");
-                    $this->sendCustomerNotification($customer->id, "Đơn hàng mới từ khách hàng", "Khách hàng $customerName đã tạo đơn hàng mới, mã đơn hàng $orderId");
+                    $this->sendUserNotification($customer?->responsible_staff ?? '', "Tạo đơn hàng thành công", "Bạn đã tạo thành công đơn hàng $orderId cho cửa hàng $customerName");
+                    $this->sendCustomerNotification($customer?->id ?? '', "Đơn hàng mới từ khách hàng", "Khách hàng $customerName đã tạo đơn hàng mới, mã đơn hàng $orderId");
                     break;
                 case 'customer':
-                    $this->sendCustomerNotification($customer->id, 'Tạo đơn hàng mới thành công', "Bạn đã tạo thành công đơn hàng mới, mã đơn hàng $orderId");
+                    $this->sendCustomerNotification($customer?->id ?? '', 'Tạo đơn hàng mới thành công', "Bạn đã tạo thành công đơn hàng mới, mã đơn hàng $orderId");
                     $this->sendUserNotification('admin', "Đơn hàng mới từ khách hàng",  "$customerName đã tạo thành công đơn hàng $orderId");
-                    $this->sendUserNotification($customer->responsible_staff, "Đơn hàng mới từ khách hàng",  "$customerName đã tạo thành công đơn hàng $orderId");
+                    $this->sendUserNotification($customer?->responsible_staff ?? '', "Đơn hàng mới từ khách hàng",  "$customerName đã tạo thành công đơn hàng $orderId");
                     break;
             }
             return $this->success($order);
@@ -225,19 +225,19 @@ class OrderController extends Controller
             $order = $order->load('details');
             $order = $order->load(['details', 'staff']);
 
-            $staffName = $order->staff?->name;
+            $staffName = $order->staff?->name ?? '';
             $orderId = $order->displayId;
             $customerName = $order->customer_name;
 
             switch ($this->operator) {
                 case 'admin':
                     $this->sendUserNotification('admin', 'Sửa đơn hàng thành công', "Bạn đã sửa thành công đơn hàng $orderId cho cửa hàng $customerName");
-                    $this->sendUserNotification($customer->responsible_staff, 'Đơn hàng được cập bởi Admin', "Admin đã sửa đơn hàng mới cho cửa hàng $customerName do bạn phụ trách. Mã đơn hàng là $orderId");
+                    $this->sendUserNotification($customer?->responsible_staff ?? '', 'Đơn hàng được cập bởi Admin', "Admin đã sửa đơn hàng mới cho cửa hàng $customerName do bạn phụ trách. Mã đơn hàng là $orderId");
                     $this->sendCustomerNotification($customer->id, 'Cập nhật đơn hàng', "Admin đã sửa đơn hàng $orderId của bạn");
                     break;
                 case 'employee':
                     $this->sendUserNotification('admin', "Đơn hàng được cập bởi $staffName",  "$staffName đã sửa đơn hàng cho cửa hàng $customerName. Mã đơn hàng là $orderId");
-                    $this->sendUserNotification($customer->responsible_staff, "Sửa đơn hàng thành công", "Bạn đã sửa thành công đơn hàng $orderId cho cửa hàng $customerName");
+                    $this->sendUserNotification($customer?->responsible_staff ?? '', "Sửa đơn hàng thành công", "Bạn đã sửa thành công đơn hàng $orderId cho cửa hàng $customerName");
                     $this->sendCustomerNotification($customer->id, "Cập nhật đơn hàng", "Admin đã sửa đơn hàng $orderId của bạn");
                     break;
             }
