@@ -36,10 +36,13 @@ class OrderController extends Controller
     public function __construct()
     {
         $user = auth('sanctum')->user();
-        if ($user->tokenCan('customer')) {
-            $this->operator = 'customer';
-        } else {
-            $this->operator = $user->tokenCan('admin') ? 'admin' : 'employee';
+
+        if ($user) {
+            if ($user->tokenCan('customer')) {
+                $this->operator = 'customer';
+            } else {
+                $this->operator = $user->tokenCan('admin') ? 'admin' : 'employee';
+            }
         }
     }
 
