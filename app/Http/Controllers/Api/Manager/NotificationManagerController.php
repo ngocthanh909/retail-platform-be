@@ -95,7 +95,8 @@ class NotificationManagerController extends Controller
                 'delivery_date' => $data['delivery_date'] ?? '2024-01-01',
                 'delivery_time' => $data['delivery_time'] ?? '00:00:00',
                 'repeat' => $data['repeat'] ?? '',
-                'next_repeat' => null
+                'next_repeat' => null,
+                'status' => $data['status'] ? 1 : 0
             ]);
             if ($data['repeat'] ?? '') {
                 $weekMap = [
