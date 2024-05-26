@@ -145,7 +145,7 @@ class NotificationManagerController extends Controller
     function list(Request $request)
     {
         try {
-            $notifications = NotificationCampaign::where('status', 1)::paginate(config('store_list'));
+            $notifications = NotificationCampaign::where('status', 1)->paginate(config('store_list'));
             return $this->success($notifications, 'Gửi thông báo thành công!');
         } catch (\Throwable $e) {
             Log::error($e);

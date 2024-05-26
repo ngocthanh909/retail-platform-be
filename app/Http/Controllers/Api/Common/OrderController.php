@@ -441,7 +441,7 @@ class OrderController extends Controller
             $responseData = [
                 'products' => $products,
                 'discount' => 0,
-                'discount_description' => '',
+                'discount_description' => '', //Quà
                 'subtotal' => $subTotal,
                 'total' => $total,
             ];
