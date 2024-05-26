@@ -10,7 +10,8 @@
     "require": {
         "php": "^8.1",
         "guzzlehttp/guzzle": "^7.2",
-        "kedniko/firebase-cloud-messaging-http-v1-php": "dev-master",
+        "kreait/firebase-php": "^7.11",
+        "kreait/laravel-firebase": "^5.8",
         "laravel/framework": "^10.10",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8"
@@ -24,20 +25,6 @@
         "phpunit/phpunit": "^10.1",
         "spatie/laravel-ignition": "^2.0"
     },
-    "repositories": [
-        {
-            "type": "package",
-            "package": {
-                "name": "kedniko/firebase-cloud-messaging-http-v1-php",
-                "version": "master",
-                "source": {
-                    "url": "https://github.com/phpdev-irtech/firebase-cloud-messaging-http-v1-php.git",
-                    "type": "git",
-                    "reference": "master"
-                }
-            }
-        }
-    ],
     "autoload": {
         "psr-4": {
             "App\\": "app/",

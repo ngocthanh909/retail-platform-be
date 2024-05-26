@@ -21,7 +21,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Kedniko\FCM\FCM;
+use Kreait\Firebase\Messaging\CloudMessage;
 
 trait NotificationTrait
 {
@@ -161,21 +161,19 @@ trait NotificationTrait
             $projectID = config('app.fcm_app_name');
             Log::info("Send to $token");
             $body = [
-                'message' => [
-                    'token' => $token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $content,
-                    ],
-                    'data' => [
-                        'story_id' => 'notification',
-                    ]
+                'token' => $token,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $content,
                 ],
+                'data' => [
+                    'story_id' => 'notification',
+                ]
             ];
-
-            $bearerToken = FCM::getBearerToken($authKeyContent);
-
-            FCM::send($bearerToken, $projectID, $body);
+            $messaging = app('firebase.messaging');
+            $message = CloudMessage::fromArray($body);
+            $sent = $messaging->send($message);
+            Log::info(json_encode($sent));
         } catch (\Throwable $e) {
             Log::error($e);
         }
