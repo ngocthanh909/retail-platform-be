@@ -29,6 +29,7 @@ class NotificationCampaignRequest extends FormRequest
             'repeat' => 'string',
             'delivery_date' => ['nullable', 'date'],
             'delivery_time' => ['nullable', 'date_format:H:i:s'],
+            'status' => 'nullable'
         ];
     }
 }

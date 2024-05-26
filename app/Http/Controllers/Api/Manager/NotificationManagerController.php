@@ -54,9 +54,10 @@ class NotificationManagerController extends Controller
                         $this->sendCustomerNotification($data['receiver_id'], $data['title'], $data['content']);
                         break;
                     case str_starts_with($data['repeat'], 'weekly'):
-                        $dayInWeek = explode(':', $data['repeat']);
-                        $dayInWeek = count($dayInWeek) > 1 ? $dayInWeek[1] : null;
-                        $campaign->next_repeat = now()->setDay(1);
+                        $dayOfWeek = explode(':', $data['repeat']);
+                        $dayOfWeek = count($dayOfWeek) > 1 ? (int)$dayOfWeek[1] : null;
+                        $sampleTime = Carbon::parse(now()->format('Y-m-d') . ' ' . $campaign->delivery_time)->addDays($dayOfWeek);
+                        $campaign->next_repeat = $sampleTime->isFuture() ? $sampleTime : $sampleTime->addWeek();
                         break;
                     case 'everyday':
                         $time = Carbon::make($campaign->delivery_time);
@@ -94,7 +95,8 @@ class NotificationManagerController extends Controller
                 'delivery_date' => $data['delivery_date'] ?? '2024-01-01',
                 'delivery_time' => $data['delivery_time'] ?? '00:00:00',
                 'repeat' => $data['repeat'] ?? '',
-                'next_repeat' => null
+                'next_repeat' => null,
+                'status' => $data['status'] ? 1 : 0
             ]);
             if ($data['repeat'] ?? '') {
                 $weekMap = [
@@ -111,9 +113,10 @@ class NotificationManagerController extends Controller
                         $this->sendCustomerNotification($data['receiver_id'], $data['title'], $data['content']);
                         break;
                     case str_starts_with($data['repeat'], 'weekly'):
-                        $dayInWeek = explode(':', $data['repeat']);
-                        $dayInWeek = count($dayInWeek) > 1 ? $dayInWeek[1] : null;
-                        $campaign->next_repeat = now()->setDay((int)$dayInWeek);
+                        $dayOfWeek = explode(':', $data['repeat']);
+                        $dayOfWeek = count($dayOfWeek) > 1 ? (int)$dayOfWeek[1] : null;
+                        $sampleTime = Carbon::parse(now()->format('Y-m-d') . ' ' . $campaign->delivery_time)->addDays($dayOfWeek);
+                        $campaign->next_repeat = $sampleTime->isFuture() ? $sampleTime : $sampleTime->addWeek();
                         break;
                     case 'everyday':
                         $time = Carbon::make($campaign->delivery_time);
@@ -145,7 +148,7 @@ class NotificationManagerController extends Controller
     function list(Request $request)
     {
         try {
-            $notifications = NotificationCampaign::where('status', 1)::paginate(config('store_list'));
+            $notifications = NotificationCampaign::where('status', 1)->orderBy('created_at', 'DESC')->paginate(config('store_list'));
             return $this->success($notifications, 'Gửi thông báo thành công!');
         } catch (\Throwable $e) {
             Log::error($e);

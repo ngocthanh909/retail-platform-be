@@ -2,10 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Http\Traits\Helpers\NotificationTrait;
+use App\Models\NotificationCampaign;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SendAutoNotification extends Command
 {
+    use NotificationTrait;
     /**
      * The name and signature of the console command.
      *
@@ -18,59 +24,39 @@ class SendAutoNotification extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Send campaign message each minute';
 
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $notification = new Notification([
-            'title' => $data['title'] ?? '',
-            'content' => $data['content'] ?? '',
-            'image' => '',
-            'is_manual' => true
-        ]);
-        if (!$notification->save()) {
-            throw new Exception('Có lỗi khi tạo thông báo');
-        }
-        $notificationDeliveryList = [];
-        $shouldSendNotificationCustomer = [];
-        if ($data['receiver_id'] == 0) {
-            $customers = Customer::where('status', 1)->get();
-            foreach ($customers as $customer) {
-                $shouldSendNotificationCustomer[] = $customer->device_token ?? '';
-                $notificationDeliveryList[] = [
-                    'receiver_id' => $customer->id,
-                    'user_type' => 1,
-                    'notification_id' => $notification->id ?? 0,
-                    'delivery_time' => $data['delivery_time'] ?? now(),
-                    'created_at' => now(),
-                    'updated_at' => now()
-                ];
-            }
-        } else {
-            $customer = Customer::find($data['receiver_id']);
-            $shouldSendNotificationCustomer[] = $customer->device_token ?? '';
-            $notificationDeliveryList[] = [
-                'receiver_id' => $data['receiver_id'],
-                'user_type' => 1,
-                'notification_id' => $notification->id ?? 0,
-                'delivery_time' => $data['delivery_time'] ?? now(),
-                'created_at' => now(),
-                'updated_at' => now()
-            ];
-        };
-        $deliveryNotification = NotificationDelivery::insert($notificationDeliveryList);
-        if (!$deliveryNotification) {
-            throw new Exception('Lỗi khi gửi cho từng khách hàng');
-        }
-        DB::commit();
-
-        if (!$data['delivery_time']) {
-            foreach ($shouldSendNotificationCustomer as $receiverToken) {
-                SendAutomaticNotification::dispatch($receiverToken, $notification->title ?? '', $notification->content ?? '');
-                $this->sendFirebaseNotification($receiverToken, $notification->title ?? '', $notification->content ?? '');
+        $campaigns = NotificationCampaign::where('status', 1)->whereRaw("DATE_FORMAT(next_repeat, '%Y-%m-%d %H:%i') = '" . now()->format('Y-m-d H:i') . "'")->get();
+        $this->info(count($campaigns) . " campaigns start now");
+        foreach ($campaigns as $campaign) {
+            try {
+                $this->sendCustomerNotification($campaign->receiver_id, $campaign->title, $campaign->content);
+                switch ($campaign->repeat) {
+                    case str_starts_with($campaign->repeat, 'weekly'):
+                        $dayOfWeek = explode(':', $campaign->repeat);
+                        $dayOfWeek = count($dayOfWeek) > 1 ? (int)$dayOfWeek[1] : null;
+                        $sampleTime = Carbon::parse(now()->format('Y-m-d') . ' ' . $campaign->delivery_time)->addDays($dayOfWeek);
+                        $campaign->next_repeat = $sampleTime->isFuture() ? $sampleTime : $sampleTime->addWeek();
+                        $campaign->save();
+                        break;
+                    case 'everyday':
+                        $time = Carbon::make($campaign->delivery_time);
+                        $campaign->next_repeat = $time->isPast() ? $time->addDay() : $time;
+                        $campaign->save();
+                        break;
+                    default:
+                        $campaign->next_repeat = null;
+                        $campaign->save();
+                        break;
+                }
+            } catch (\Throwable $e) {
+                Log::error($e);
+                $this->error($e->getMessage());
             }
         }
     }

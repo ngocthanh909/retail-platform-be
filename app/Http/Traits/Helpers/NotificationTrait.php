@@ -21,7 +21,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Kedniko\FCM\FCM;
+use Kreait\Firebase\Messaging\CloudMessage;
 
 trait NotificationTrait
 {
@@ -73,11 +73,11 @@ trait NotificationTrait
                 SendAutomaticNotification::dispatch($receiverToken, $notification->title ?? '', $notification->content ?? '');
             }
 
-            return $this->success([], 'Gửi thông báo thành công!');
+            return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error($e);
-            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+            return false;
         }
     }
     function sendCustomerNotification($receiver, $title, $content)
@@ -120,11 +120,11 @@ trait NotificationTrait
             DB::commit();
 
 
-            return $this->success([], 'Gửi thông báo thành công!');
+            return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error($e);
-            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+            return false;
         }
     }
 
@@ -156,26 +156,27 @@ trait NotificationTrait
 
     function sendFirebaseNotification($token, $title = 'Đăng Khoa', $content = '')
     {
+        if (empty($token)) {
+            return false;
+        }
         try {
             $authKeyContent = json_decode(File::get(storage_path('firebase-adminsdk.json')), true);
             $projectID = config('app.fcm_app_name');
             Log::info("Send to $token");
             $body = [
-                'message' => [
-                    'token' => $token,
-                    'notification' => [
-                        'title' => $title,
-                        'body' => $content,
-                    ],
-                    'data' => [
-                        'story_id' => 'notification',
-                    ]
+                'token' => $token,
+                'notification' => [
+                    'title' => $title,
+                    'body' => $content,
                 ],
+                'data' => [
+                    'story_id' => 'notification',
+                ]
             ];
-
-            $bearerToken = FCM::getBearerToken($authKeyContent);
-
-            FCM::send($bearerToken, $projectID, $body);
+            $messaging = app('firebase.messaging');
+            $message = CloudMessage::fromArray($body);
+            $sent = $messaging->send($message);
+            Log::info(json_encode($sent));
         } catch (\Throwable $e) {
             Log::error($e);
         }

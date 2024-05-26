@@ -449,7 +449,7 @@ class OrderController extends Controller
             $responseData = [
                 'products' => $products,
                 'discount' => 0,
-                'discount_description' => 'Nếu bạn được tặng quà thì ghi chú ở đây. Nếu được giảm giá thì discount trả về giá trị theo số tiền dc giảm',
+                'discount_description' => '', //Quà
                 'subtotal' => $subTotal,
                 'total' => $total,
             ];
