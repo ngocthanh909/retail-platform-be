@@ -149,8 +149,6 @@ Route::prefix('category')->group(function () {
     Route::get('/list-for-manager', [CategoryController::class, 'list']);
     Route::get('/{id}', [CategoryController::class, 'detail']);
 });
-
-
 Route::prefix('order')->middleware(['auth:sanctum', 'ability:admin,customer,employee'])->group(function () {
     Route::post('calculate', [OrderController::class, 'calculateOrder']);
     Route::post('checkout', [OrderController::class, 'checkout']);

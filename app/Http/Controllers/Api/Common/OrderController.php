@@ -130,7 +130,10 @@ class OrderController extends Controller
             }
 
             $applyVoucherResult = $this->applyVoucher($data['discount_code'] ?? '', $customer->id, $order, []);
-            dd($applyVoucherResult);
+            if (!is_string($applyVoucherResult)) {
+                $order->total = $order->subtotal - $applyVoucherResult['discount'];
+                $order->discount_note = $applyVoucherResult['gift'];
+            }
 
             if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi tạo chi tiết đơn hàng');
@@ -534,9 +537,9 @@ class OrderController extends Controller
                 if ($order->total >= $promotion->promote_min_order_price) {
                     if ($promotion->promote_type == 0) {
                         if ($promotion->discount_type == 0) {
-                            $discount = $order->total - $promotion->discount_value;
+                            $discount = $promotion->discount_value;
                         } else {
-                            $discount = $order->total - ($order->total * $promotion->discount_value / 100);
+                            $discount = ($order->total * $promotion->discount_value / 100);
                         }
                     }
                     if ($promotion->promote_type == 1) {
@@ -550,7 +553,11 @@ class OrderController extends Controller
                 if ($order->total > 0) {
                 }
             }
-            dd($gift, $discount);
+            // dd($gift, $discount, $order);
+            return [
+                'gift' => $gift,
+                'discount' => $discount
+            ];
         } catch (\Throwable $e) {
             Log::error($e);
             return $e->getMessage();
