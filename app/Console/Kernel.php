@@ -12,7 +12,8 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('queue:work')->everyMinute()->withoutOverlapping();
+        $schedule->command('app:send-auto-notification')->everyMinute()->withoutOverlapping();
+        $schedule->command('queue:work')->everyMinute()->withoutOverlapping()->runInBackground();
     }
 
     /**
@@ -20,7 +21,7 @@ class Kernel extends ConsoleKernel
      */
     protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

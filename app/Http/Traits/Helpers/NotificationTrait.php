@@ -73,11 +73,11 @@ trait NotificationTrait
                 SendAutomaticNotification::dispatch($receiverToken, $notification->title ?? '', $notification->content ?? '');
             }
 
-            return $this->success([], 'Gửi thông báo thành công!');
+            return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error($e);
-            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+            return false;
         }
     }
     function sendCustomerNotification($receiver, $title, $content)
@@ -120,11 +120,11 @@ trait NotificationTrait
             DB::commit();
 
 
-            return $this->success([], 'Gửi thông báo thành công!');
+            return true;
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error($e);
-            return $this->failure('Gửi thông báo thất bại', $e->getMessage());
+            return false;
         }
     }
 
@@ -156,6 +156,9 @@ trait NotificationTrait
 
     function sendFirebaseNotification($token, $title = 'Đăng Khoa', $content = '')
     {
+        if (empty($token)) {
+            return false;
+        }
         try {
             $authKeyContent = json_decode(File::get(storage_path('firebase-adminsdk.json')), true);
             $projectID = config('app.fcm_app_name');
