@@ -104,8 +104,6 @@ class OrderController extends Controller
                 'status' => 1,
             ]);
 
-
-
             if (!$order->save()) throw new Exception('Lỗi trong quá trình tạo đơn hàng');
 
             $orderDetails = [];
@@ -138,6 +136,11 @@ class OrderController extends Controller
             if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi tạo chi tiết đơn hàng');
             };
+            if ($responseData['discount_note'] || $responseData['discount']) {
+                $promotion = Promotion::where('code', $data['discount_code'] ?? '')->first();
+                $promotion->used += 1;
+                $promotion->save();
+            }
             DB::commit();
             $order->total_commission = $orderCommission;
             $order->save();
