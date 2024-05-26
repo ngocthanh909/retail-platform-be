@@ -112,9 +112,10 @@ class NotificationManagerController extends Controller
                         $this->sendCustomerNotification($data['receiver_id'], $data['title'], $data['content']);
                         break;
                     case str_starts_with($data['repeat'], 'weekly'):
-                        $dayInWeek = explode(':', $data['repeat']);
-                        $dayInWeek = count($dayInWeek) > 1 ? $dayInWeek[1] : null;
-                        $campaign->next_repeat = now()->setDay((int)$dayInWeek);
+                        $dayOfWeek = explode(':', $data['repeat']);
+                        $dayOfWeek = count($dayOfWeek) > 1 ? (int)$dayOfWeek[1] : null;
+                        $sampleTime = Carbon::parse(now()->format('Y-m-d') . ' ' . $campaign->delivery_time)->addDays($dayOfWeek);
+                        $campaign->next_repeat = $sampleTime->isFuture() ? $sampleTime : $sampleTime->addWeek();
                         break;
                     case 'everyday':
                         $time = Carbon::make($campaign->delivery_time);
