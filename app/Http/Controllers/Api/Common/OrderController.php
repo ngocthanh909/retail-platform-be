@@ -19,6 +19,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\Promotion;
 use App\Models\PromotionCustomer;
+use App\Models\PromotionProduct;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -96,11 +97,11 @@ class OrderController extends Controller
                 'address' => $customer->address ?? ($request->customer_address ?? ''),
                 'subtotal' => $responseData['subtotal'],
                 'total' => $responseData['total'],
-                'discount_code' => $request->discount_code,
+                'discount_code' => (!empty($responseData['discount'] || !empty($responseData['discount_note']))) ? $data['discount_code'] : '',
                 'discount' => $responseData['discount'],
-                'discount_note' => $responseData['discount_description'],
+                'discount_note' => $responseData['discount_note'],
                 'note' => $data['note'] ?? '',
-                'status' => 1
+                'status' => 1,
             ]);
 
 
@@ -132,11 +133,7 @@ class OrderController extends Controller
                 ];
             }
 
-            $applyVoucherResult = $this->applyVoucher($data['discount_code'] ?? '', $customer->id, $order, []);
-            if (!is_string($applyVoucherResult)) {
-                $order->total = $order->subtotal - $applyVoucherResult['discount'];
-                $order->discount_note = $applyVoucherResult['gift'];
-            }
+
 
             if (!OrderDetail::insert($orderDetails)) {
                 throw new Exception('Lỗi khi tạo chi tiết đơn hàng');
@@ -409,14 +406,16 @@ class OrderController extends Controller
             $products = [];
             $isGuest = false;
 
+
             //Order variable
             $subTotal = 0;
             $total = 0;
-
+            $customer = null;
             if ($user->tokenCan('customer')) {
                 if (empty($user?->responsible_staff)) {
                     $isGuest = true;
                 }
+                $customer  = $user;
             } else {
                 //Check logic customer is a member or not
                 $customer = Customer::find($data['customer_id']);
@@ -427,6 +426,7 @@ class OrderController extends Controller
                     $isGuest = true;
                 }
             }
+
 
             if (count($rawProducts) > 0) {
                 foreach ($rawProducts as $rawProduct) {
@@ -451,13 +451,24 @@ class OrderController extends Controller
                 }
             }
 
-            $total = $subTotal;
+
+            $discount_note = '';
+            $discountValue = 0;
+            $applyVoucherResult = $this->applyVoucher($data['discount_code'] ?? '', $customer->id ?? 0, $subTotal, $products);
+
+            if (!is_string($applyVoucherResult)) {
+                $discountValue = (float)$applyVoucherResult['discount'];
+                $discount_note = $applyVoucherResult['gift'];
+            }
+
+            $total = $subTotal - $discountValue;
             $responseData = [
                 'products' => $products,
-                'discount' => 0,
-                'discount_description' => '', //Quà
+                'discount' => $discountValue ?? 0,
+                'discount_note' => $discount_note ?? '', //Quà
                 'subtotal' => $subTotal,
                 'total' => $total,
+                'warning' => is_string($applyVoucherResult) ? $applyVoucherResult : ''
             ];
             return $responseData;
         } catch (\Throwable $e) {
@@ -514,7 +525,7 @@ class OrderController extends Controller
         return $this->success($orders);
     }
 
-    public function applyVoucher($code, $customer_id, $order, $details)
+    public function applyVoucher($code, $customer_id, $subTotal, $details)
     {
         try {
             if (!$code) {
@@ -526,6 +537,7 @@ class OrderController extends Controller
                 ->where('end_date', '>=', now())
                 ->whereRaw('`used` < `qty`')
                 ->first();
+
             if (!$promotion) {
                 throw new Exception('Không tìm thấy khuyến mãi hoặc không nằm trong thời gian áp dụng');
             }
@@ -537,12 +549,12 @@ class OrderController extends Controller
             $gift = '';
             $discount = 0;
             if ($promotion->promote_by == 0) {
-                if ($order->total >= $promotion->promote_min_order_price) {
+                if ($subTotal >= (float)$promotion->promote_min_order_price) {
                     if ($promotion->promote_type == 0) {
                         if ($promotion->discount_type == 0) {
                             $discount = $promotion->discount_value;
                         } else {
-                            $discount = ($order->total * $promotion->discount_value / 100);
+                            $discount = ($subTotal * $promotion->discount_value / 100);
                         }
                     }
                     if ($promotion->promote_type == 1) {
@@ -553,10 +565,17 @@ class OrderController extends Controller
                     }
                 }
             } else {
-                if ($order->total > 0) {
+                $inPromotionProducts = PromotionProduct::where('promotion_id', $promotion->id)->get();
+                foreach ($details as $detail) {
+                    if ($inPromotionProducts->where('product_id', $detail['product_id'])->orWhere('category_id', $detail['category_id'])) {
+                        $giftProduct = Product::find($promotion->gift_product_id);
+                        if ($giftProduct) {
+                            $gift = $giftProduct->product_name . " x" .  $giftProduct->gift_product_qty;
+                        }
+                    }
                 }
             }
-            // dd($gift, $discount, $order);
+
             return [
                 'gift' => $gift,
                 'discount' => $discount
