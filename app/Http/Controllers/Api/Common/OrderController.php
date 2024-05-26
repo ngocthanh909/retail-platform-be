@@ -129,7 +129,7 @@ class OrderController extends Controller
                 ];
             }
 
-            $applyVoucherResult = $this->applyVoucher('VLXX', $customer->id, $order, []);
+            $applyVoucherResult = $this->applyVoucher($data['discount_code'] ?? '', $customer->id, $order, []);
             dd($applyVoucherResult);
 
             if (!OrderDetail::insert($orderDetails)) {
@@ -514,24 +514,46 @@ class OrderController extends Controller
             if (!$code) {
                 return false;
             }
+
             $promotion = Promotion::where('code', $code)
-                ->where('start_date', '>=', now())
-                ->where('end_date', '<=', now())
+                ->where('start_date', '<=', now())
+                ->where('end_date', '>=', now())
                 ->whereRaw('`used` < `qty`')
                 ->first();
-
             if (!$promotion) {
                 throw new Exception('Không tìm thấy khuyến mãi hoặc không nằm trong thời gian áp dụng');
             }
             $promotionApplyCustomer = ($promotion->apply == 1) ? PromotionCustomer::where('promotion_id', $promotion->id)->where('customer_id', $customer_id)->first() : true;
-            dd($promotionApplyCustomer);
 
             if (!$promotionApplyCustomer) {
                 throw new Exception('Khuyến mãi không áp dụng cho khách hàng');
             }
+            $gift = '';
+            $discount = 0;
+            if ($promotion->promote_by == 0) {
+                if ($order->total >= $promotion->promote_min_order_price) {
+                    if ($promotion->promote_type == 0) {
+                        if ($promotion->discount_type == 0) {
+                            $discount = $order->total - $promotion->discount_value;
+                        } else {
+                            $discount = $order->total - ($order->total * $promotion->discount_value / 100);
+                        }
+                    }
+                    if ($promotion->promote_type == 1) {
+                        $giftProduct = Product::find($promotion->gift_product_id);
+                        if ($giftProduct) {
+                            $gift = $giftProduct->product_name . ' x' . $promotion->gift_product_qty;
+                        }
+                    }
+                }
+            } else {
+                if ($order->total > 0) {
+                }
+            }
+            dd($gift, $discount);
         } catch (\Throwable $e) {
             Log::error($e);
-            return false;
+            return $e->getMessage();
         }
     }
 }
