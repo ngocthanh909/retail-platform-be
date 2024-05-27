@@ -30,10 +30,12 @@ class Promotion extends Model
         'discount_typ'
     ];
 
-    function applyCustomer(){
-        return $this->hasMany(PromotionCustomer::class, 'promotion_id', 'id');
+    function applyCustomer()
+    {
+        return $this->hasMany(PromotionCustomer::class, 'id', 'promotion_id');
     }
-    function applyProduct(){
-        return $this->hasMany(PromotionProduct::class, 'promotion_id', 'id');
+    function applyProduct()
+    {
+        return $this->hasMany(PromotionProduct::class, 'id', 'promotion_id');
     }
 }
