@@ -459,9 +459,9 @@ class OrderController extends Controller
             $discountValue = 0;
             $applyVoucherResult = $this->applyVoucher($data['discount_code'] ?? '', $customer->id ?? 0, $subTotal, $products);
 
-            if (!is_string($applyVoucherResult)) {
-                $discountValue = (float)$applyVoucherResult['discount'];
-                $discount_note = $applyVoucherResult['gift'];
+            if (!is_string($applyVoucherResult) && is_array($applyVoucherResult)) {
+                $discountValue = (float)$applyVoucherResult['discount'] ?? 0;
+                $discount_note = $applyVoucherResult['gift'] ?? '';
             }
 
             $total = $subTotal - $discountValue;
