@@ -155,7 +155,7 @@ class CommissionManagementController extends Controller
 
             $employeeId = $request->employee_id;
             $customerId = $request->customer_id;
-            $orders = Order::where('responsible_staff', $employeeId)->where('customer_id', $customerId)->where('status', 3)->whereRaw("DATE(created_at) BETWEEN '$start' and '$end'")->get();
+            $orders = Order::where('responsible_staff', $employeeId)->where('customer_id', $customerId)->where('total_commission', '>', 0)->where('status', 3)->whereRaw("DATE(created_at) BETWEEN '$start' and '$end'")->get();
             foreach($orders as $order){
                 $orderId = $order->id;
                 $order->commissions = DB::select("
