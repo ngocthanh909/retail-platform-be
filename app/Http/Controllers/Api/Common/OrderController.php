@@ -570,10 +570,15 @@ class OrderController extends Controller
             } else {
                 $inPromotionProducts = PromotionProduct::where('promotion_id', $promotion->id)->get();
                 foreach ($details as $detail) {
-                    if ($inPromotionProducts->where('product_id', $detail['product_id'])->orWhere('category_id', $detail['category_id'])) {
-                        $giftProduct = Product::find($promotion->gift_product_id);
+					$product = Product::find($detail['id']);
+					$giftProduct = Product::find($promotion->gift_product_id);
+					$pId = $product->id;
+					$cId = $product->category_id;
+                    if ($inPromotionProducts->filter(function($item) use ($pId, $cId) {
+						return ($item->product_id == $pId) || ($item->product_id == $cId);
+					})) {
                         if ($giftProduct) {
-                            $gift = $giftProduct->product_name . " x" .  $giftProduct->gift_product_qty;
+                            $gift = $giftProduct->product_name . " x" .  $promotion->gift_product_qty;
                         }
                     }
                 }

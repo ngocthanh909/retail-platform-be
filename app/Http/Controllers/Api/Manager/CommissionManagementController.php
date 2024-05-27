@@ -67,9 +67,24 @@ class CommissionManagementController extends Controller
             $employeeId = $request->employee_id;
             $customerId = $request->customer_id;
             $employee = User::findOrFail($employeeId);
-            $dateCondition = "and DATE(o.created_at) >= '$start' and DATE(o.created_at) <= '$end'";
+
+            $dateCondition = "and DATE(o.created_at) BETWEEN '$start' and '$end'";
             $customerCondition = $customerId ? "and o.customer_id = $customerId" : '';
-            $customerOrderByTime = DB::select("select distinct customer_id, customer_name, phone,  concat(address, ',', district, ',', province) as full_address from orders o where o.status = 3 and o.responsible_staff = $employeeId $dateCondition $customerCondition");
+            DB::enableQueryLog();
+            $customerOrderByTime = DB::select("
+            SELECT DISTINCT
+                o.customer_id AS customer_id,
+                c.customer_name,
+                c.phone,
+                CONCAT(c.address, ', ', c.district, ', ', c.province) AS full_address
+            FROM
+                orders o
+            JOIN
+                customers c ON o.customer_id = c.id
+            WHERE
+                o.status = 3
+                AND o.responsible_staff = $employeeId $dateCondition $customerCondition");
+
             foreach ($customerOrderByTime as $customerCommission) {
                 $customerId = $customerCommission->customer_id;
                 $detailCommissionInfo = DB::select("select count(o.id) order_count, sum(o.total_commission) total_commission from orders o where o.responsible_staff = $employeeId and  o.status = 3 and o.customer_id = $customerId $dateCondition group by customer_id limit 1");
@@ -100,6 +115,7 @@ class CommissionManagementController extends Controller
                 switch ($dateRange) {
                     case 'today':
                         $start = now()->format('Y-m-d');
+                        $end = now()->format('Y-m-d');
                         break;
                     case 'this_week':
                         $start = now()->startOfWeek()->format('Y-m-d');
@@ -139,7 +155,23 @@ class CommissionManagementController extends Controller
 
             $employeeId = $request->employee_id;
             $customerId = $request->customer_id;
-            $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end)->get();
+            $orders = Order::where('responsible_staff', $employeeId)->where('customer_id', $customerId)->where('total_commission', '>', 0)->where('status', 3)->whereRaw("DATE(created_at) BETWEEN '$start' and '$end'")->get();
+            foreach($orders as $order){
+                $orderId = $order->id;
+                $order->commissions = DB::select("
+                SELECT
+                    od.category_id,
+                    SUM(od.category_commission_amount) AS sum,
+                    od.category_name,
+                    od.category_commission_rate,
+                    sum(qty) as qty
+                FROM
+                    order_details od
+                WHERE
+                    od.order_id = $orderId
+                GROUP BY
+                    od.category_id, od.category_name, od.category_commission_rate;");
+            }
             $sum = array_sum(data_get($orders, '*.total_commission'));
             return $this->success(['list' => $orders, 'total' => $sum]);
         } catch (\Throwable $e) {
