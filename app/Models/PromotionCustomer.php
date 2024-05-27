@@ -10,4 +10,9 @@ class PromotionCustomer extends Model
     use HasFactory;
     protected $table = 'promotion_customers';
     protected $fillable = ['promotion_id', 'customer_id'];
+
+    public function customer()
+    {
+        return $this->hasOne(Customer::class, 'id', 'customer_id');
+    }
 }
