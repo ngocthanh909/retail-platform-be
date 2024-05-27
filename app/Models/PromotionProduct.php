@@ -11,12 +11,12 @@ class PromotionProduct extends Model
     protected $table = 'promotion_apply_products';
     protected $fillable = ['promotion_id', 'product_id', 'category_id'];
 
-    public function products()
+    public function product()
     {
-        return $this->hasMany(Product::class, 'id', 'product_id');
+        return $this->hasOne(Product::class, 'id', 'product_id');
     }
-    public function categories()
+    public function category()
     {
-        return $this->hasMany(Product::class, 'id', 'category_id');
+        return $this->hasOne(Product::class, 'id', 'category_id');
     }
 }
