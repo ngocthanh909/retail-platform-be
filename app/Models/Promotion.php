@@ -9,26 +9,27 @@ class Promotion extends Model
 {
     use HasFactory;
     protected $table = 'promotions';
-    protected $fillable = [
-        'name',
-        'code',
-        'description',
-        'start_date',
-        'end_date',
-        'apply',
-        'qty',
-        'used',
-        'status',
+    // protected $fillable = [
+    //     'name',
+    //     'code',
+    //     'description',
+    //     'start_date',
+    //     'end_date',
+    //     'apply',
+    //     'qty',
+    //     'used',
+    //     'status',
 
-        'promote_by',
-        'promote_type',
-        'promote_min_order_price',
+    //     'promote_by',
+    //     'promote_type',
+    //     'promote_min_order_price',
 
-        'gift_product_id',
-        'gift_product_qty',
-        'discount_value',
-        'discount_typ'
-    ];
+    //     'gift_product_id',
+    //     'gift_product_qty',
+    //     'discount_value',
+    //     'discount_typ'
+    // ];
+    protected $guarded = [];
 
     function applyCustomer()
     {
