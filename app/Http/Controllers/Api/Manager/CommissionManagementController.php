@@ -115,6 +115,7 @@ class CommissionManagementController extends Controller
                 switch ($dateRange) {
                     case 'today':
                         $start = now()->format('Y-m-d');
+                        $end = now()->format('Y-m-d');
                         break;
                     case 'this_week':
                         $start = now()->startOfWeek()->format('Y-m-d');
@@ -154,7 +155,7 @@ class CommissionManagementController extends Controller
 
             $employeeId = $request->employee_id;
             $customerId = $request->customer_id;
-            $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereDate('created_at', '>=', $start)->whereDate('created_at', '<=', $end)->get();
+            $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereRaw("DATE(created_at) BETWEEN '$start' and '$end'")->get();
             $sum = array_sum(data_get($orders, '*.total_commission'));
             return $this->success(['list' => $orders, 'total' => $sum]);
         } catch (\Throwable $e) {
