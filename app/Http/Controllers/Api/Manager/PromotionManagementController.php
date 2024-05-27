@@ -44,7 +44,7 @@ class PromotionManagementController extends Controller
     public function detail(Request $request, $id)
     {
         try {
-            $promotion = Promotion::with(['applyProduct', 'applyProduct.product', 'applyProduct.category', 'applyCustomer.customer'])->findOrFail($id);
+            $promotion = Promotion::with(['applyProduct', 'applyProduct.product', 'applyProduct.category', 'applyCustomer.customer', 'giftProduct'])->findOrFail($id);
             return $this->success($promotion);
         } catch (\Throwable $e) {
             Log::error($e);
