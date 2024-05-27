@@ -155,7 +155,23 @@ class CommissionManagementController extends Controller
 
             $employeeId = $request->employee_id;
             $customerId = $request->customer_id;
-            $orders = Order::with('details')->where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereRaw("DATE(created_at) BETWEEN '$start' and '$end'")->get();
+            $orders = Order::where('responsible_staff', $employeeId)->where('customer_id', $customerId)->whereRaw("DATE(created_at) BETWEEN '$start' and '$end'")->get();
+            foreach($orders as $order){
+                $orderId = $order->id;
+                $order->commissions = DB::select("
+                SELECT
+                    od.category_id,
+                    SUM(od.category_commission_amount) AS sum,
+                    od.category_name,
+                    od.category_commission_rate,
+                    sum(qty) as qty
+                FROM
+                    order_details od
+                WHERE
+                    od.order_id = $orderId
+                GROUP BY
+                    od.category_id, od.category_name, od.category_commission_rate;");
+            }
             $sum = array_sum(data_get($orders, '*.total_commission'));
             return $this->success(['list' => $orders, 'total' => $sum]);
         } catch (\Throwable $e) {
