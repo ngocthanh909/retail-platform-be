@@ -106,6 +106,16 @@ class PromotionManagementController extends Controller
                     }
                     PromotionProduct::insert($products);
                 }
+                if ($data['categories'] && is_array($data['categories'])) {
+                    $categories = [];
+                    foreach ($data['categories'] as $category) {
+                        $categories[] = [
+                            'promotion_id' => $promotion->id,
+                            'category_id' => $category
+                        ];
+                    }
+                    PromotionProduct::insert($products);
+                }
             }
 
             if (!$promotionSaved) {
@@ -178,7 +188,7 @@ class PromotionManagementController extends Controller
                 if ($data['categories'] && is_array($data['categories'])) {
                     $categories = [];
                     foreach ($data['categories'] as $category) {
-                        $products[] = [
+                        $categories[] = [
                             'promotion_id' => $promotion->id,
                             'category_id' => $category
                         ];
