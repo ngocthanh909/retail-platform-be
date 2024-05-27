@@ -16,7 +16,8 @@ class PromotionManagementController extends Controller
 {
     use ApiResponseTrait;
 
-    function list(Request $request){
+    function list(Request $request)
+    {
         $start_date = $request->start_date;
         $end_date = $request->end_date;
         $status = $request->status !== null ? (int)$request->status : null;
@@ -24,16 +25,16 @@ class PromotionManagementController extends Controller
         $promote_type = $request->promote_type;
 
         $promotions = new Promotion();
-        if($start_date){
+        if ($start_date) {
             $promotions = $promotions->whereDate('start_date', '>=', $start_date);
         }
-        if($end_date){
+        if ($end_date) {
             $promotions = $promotions->whereDate('end_date', '<=', $end_date);
         }
-        if($status !== null){
+        if ($status !== null) {
             $promotions = $promotions->where('status', $status);
         }
-        if($promote_type){
+        if ($promote_type) {
             $promotions = $promotions->where('promote_type', $promote_type);
         }
         $promotions = $promotions->orderBy('created_at', 'DESC')->paginate(config('paginate.promotion'));
@@ -43,7 +44,7 @@ class PromotionManagementController extends Controller
     public function detail(Request $request, $id)
     {
         try {
-            $promotion = Promotion::with(['applyProduct', 'applyCustomer'])->findOrFail($id);
+            $promotion = Promotion::with(['applyProduct', 'applyProduct.products', 'applyProduct.categories', 'applyCustomer'])->findOrFail($id);
             return $this->success($promotion);
         } catch (\Throwable $e) {
             Log::error($e);
@@ -107,7 +108,7 @@ class PromotionManagementController extends Controller
                 }
             }
 
-            if(!$promotionSaved){
+            if (!$promotionSaved) {
                 throw new \Exception('Không thể lưu chương trình khuyến mãi');
             }
             DB::commit();
@@ -119,7 +120,8 @@ class PromotionManagementController extends Controller
         }
     }
 
-    function edit(Request $request, $id){
+    function edit(Request $request, $id)
+    {
         DB::beginTransaction();
         try {
             $data = $request->all();
@@ -185,7 +187,7 @@ class PromotionManagementController extends Controller
                 }
             }
 
-            if(!$promotionSaved){
+            if (!$promotionSaved) {
                 throw new \Exception('Không thể sửa chương trình khuyến mãi');
             }
             DB::commit();
@@ -205,7 +207,7 @@ class PromotionManagementController extends Controller
         try {
             $data = $request->all();
             $deleteMaster = Promotion::where('id', $id)->delete();
-            if(!$deleteMaster){
+            if (!$deleteMaster) {
                 throw new \Exception('Không thể xóa chương trình khuyến mãi');
             }
             PromotionProduct::where('promotion_id', $id)->delete();
@@ -219,6 +221,4 @@ class PromotionManagementController extends Controller
             return $this->failure('Xóa chương trình KM thất bại', $e->getMessage());
         }
     }
-
-
 }
