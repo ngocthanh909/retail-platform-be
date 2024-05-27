@@ -114,7 +114,7 @@ class PromotionManagementController extends Controller
                             'category_id' => $category
                         ];
                     }
-                    PromotionProduct::insert($products);
+                    PromotionProduct::insert($categories);
                 }
             }
 
