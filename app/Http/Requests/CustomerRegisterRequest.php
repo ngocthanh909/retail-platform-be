@@ -36,8 +36,8 @@ class CustomerRegisterRequest extends FormRequest
             'email' => ['nullable', 'email' => 'max:50'],
             'customer_name' => 'required|string|max:200',
             'address' => 'required|string|max:100',
-            'district_id' => 'required|numeric',
-            'province_id' => 'required|numeric',
+            'district_id' => ['nullable', 'numeric'],
+            'province_id' => ['nullable', 'numeric'],
             'status' => 'nullable',
         ];
     }
