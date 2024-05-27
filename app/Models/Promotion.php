@@ -32,10 +32,10 @@ class Promotion extends Model
 
     function applyCustomer()
     {
-        return $this->hasMany(PromotionCustomer::class, 'id', 'promotion_id');
+        return $this->hasMany(PromotionCustomer::class, 'promotion_id', 'id');
     }
     function applyProduct()
     {
-        return $this->hasMany(PromotionProduct::class, 'id', 'promotion_id');
+        return $this->hasMany(PromotionProduct::class, 'promotion_id', 'id');
     }
 }
