@@ -38,4 +38,8 @@ class Promotion extends Model
     {
         return $this->hasMany(PromotionProduct::class, 'promotion_id', 'id');
     }
+    function giftProduct()
+    {
+        return $this->hasOne(Product::class, 'id', 'gift_product_id');
+    }
 }
